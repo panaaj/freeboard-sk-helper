@@ -1,0 +1,26 @@
+{
+    "name": "freeboard-sk-helper",
+    "version": "1.0.0",
+    "description": "Freeboard-SK helper plugin for SignalK Server.",
+    "main": "index.js",
+    "keywords": [
+        "signalk-node-server-plugin",
+        "signalk",
+        "freeboard",
+        "freeboard-sk"
+    ],
+    "repository": "https://github.com/panaaj/freeboard-sk-helper",
+    "scripts": {
+        "format": "prettier-standard 'src/**/*.js'",
+        "test": "mocha"
+    },
+    "author": "AdrianP",
+    "contributors": [ { "name": "panaaj@hotmail.com" } ],
+    "license": "Apache-20",
+    "dependencies": {
+        "pouchdb": "^7.1.1"
+    },
+    "devDependencies": {
+    },
+    "signalk-plugin-enabled-by-default": true
+}
