@@ -50,8 +50,8 @@ module.exports= function (app) {
 
             //settings= props || settings
             let basePath= (typeof settings.path==='undefined' )
-                ? path.join(app.config.configPath)
-                : path.join(settings.path)            
+                ? path.join(app.config.configPath, plugin.id)
+                : path.join(settings.path, plugin.id)            
             app.debug('*** Configuration ***')
             app.debug(settings)        
 
@@ -64,7 +64,7 @@ module.exports= function (app) {
             .catch( err=> { app.debug(err) } )
 
             // ** EXPERIMENTS **
-            grib.init( path.join(basePath, plugin.id) )
+            grib.init(basePath)
             .then( res=> {
                 if(res.error) {app.debug(`*** GRIB ERROR: ${res.message} ***`) }
                 app.debug(`*** GRIB provider initialised... ${(!res.error) ? 'OK' : 'with errors!'}`)     
@@ -218,14 +218,55 @@ module.exports= function (app) {
     // ** initalise datastore
     initDB= (dbPath)=> {
         return new Promise( (resolve, reject)=> {
-            try { 
-                db= new PouchDB( path.join(dbPath, `${plugin.id}_db`) )
-                resolve({error: false, message: ''})
-                db.info().then(r=>{app.debug(r)})
+            try {      
+                checkPath(dbPath).then( p=> {
+                    if(p.error) { 
+                        resolve( {error: true, message: `Unable to create path ${dbPath}!`} )
+                    }
+                    else {            
+                        db= new PouchDB( path.join(dbPath, `course_db`) )
+                        resolve({error: false, message: ''})
+                        db.info().then(r=> { app.debug(r) } )
+                    }
+                })
             }
             catch(err) { reject( {error: true, message: err} ) }
         })
     } 
+
+    // ** check path exists / create it if it doesn't **
+    checkPath= (path)=> {
+        app.debug('*** DBinit - checkPath')  
+        let fs= require('fs')
+        return new Promise( (resolve, reject)=> {
+            if(!path) { resolve({error: true, message: `Path not supplied!`}) }
+            fs.access( // check path exists
+                path, 
+                fs.constants.W_OK | fs.constants.R_OK, 
+                err=> {
+                    if(err) {  //if not then create it
+                        app.debug(`DBInit ${path} does NOT exist...`)
+                        app.debug(`DBInit creating ${path} ...`)
+                        let mkdirp = require('mkdirp');
+                        mkdirp(path, (err)=> {
+                            if(err) { 
+                                app.debug(`DBInit unable to create  ${path} ...`, err)
+                                resolve({error: true, message: `Unable to create ${path}!`}) 
+                            }
+                            else { 
+                                app.debug(`DBInit created ${path} - OK...`)
+                                resolve({error: false, message: `Created ${path} - OK...`})                                
+                            }
+                        })
+                    }
+                    else { // path exists
+                        app.debug(`DBInit ${path} - OK...`)
+                        resolve({error: false, message: `${path} - OK...`})
+                    }
+                }
+            )
+        })
+    }    
 
     // ** additional plugin start processing 
     afterStart= async ()=> {
