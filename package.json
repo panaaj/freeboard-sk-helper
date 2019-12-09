@@ -10,10 +10,6 @@
         "freeboard-sk"
     ],
     "repository": "https://github.com/panaaj/freeboard-sk-helper",
-    "scripts": {
-        "format": "prettier-standard 'src/**/*.js'",
-        "test": "mocha"
-    },
     "author": "AdrianP",
     "contributors": [ { "name": "panaaj@hotmail.com" } ],
     "license": "Apache-20",
