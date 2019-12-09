@@ -275,7 +275,10 @@ module.exports= function (app) {
         if(db) { 
             let result= await getRecord(db, 'navData')
             if(result.error) { app.debug('** No persisted NavData **') }
-            else { navData= result }
+            else { 
+                navData= result 
+                emitCourseData()
+            }
         }         
         timers.push( setInterval( emitCourseData, 30000 ) )    
     }
