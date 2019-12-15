@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { ServerPlugin, ServerAPI } from '../types/signalk';
+import { ServerPlugin, ServerAPI } from 'signalk-plugin-types';
 import PouchDB from 'pouchdb';
 import path from 'path';
 import fs from 'fs';
