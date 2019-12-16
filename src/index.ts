@@ -97,26 +97,23 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             // **********                
             
             // **register HTTP PUT handlers
-            if(server.registerActionHandler) {
+            if(server.registerPutHandler) {
                 server.debug('** Registering Action Handler(s) **')    
-                server.registerActionHandler(
+                server.registerPutHandler(
                     'vessels.self',
                     'navigation.courseGreatCircle.activeRoute.href',
-                    '',
                     handlePutCourseData
                 ); 
-                server.registerActionHandler(
+                server.registerPutHandler(
                     'vessels.self',
                     'navigation.courseGreatCircle.activeRoute.startTime',
-                    '',
                     handlePutCourseData
                 ); 
-                server.registerActionHandler(
+                server.registerPutHandler(
                     'vessels.self',
                     'navigation.courseGreatCircle.nextPoint.position',
-                    '',
                     handlePutCourseData
-                );                 
+                );
             } 
 
             // ** register STREAM UPDATE message handlers
