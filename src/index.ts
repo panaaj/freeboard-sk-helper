@@ -116,7 +116,6 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                     'navigation.courseGreatCircle.nextPoint.position',
                     '',
                     handlePutCourseData
-                    
                 );                 
             } 
 
