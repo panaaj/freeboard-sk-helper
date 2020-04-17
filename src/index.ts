@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { ServerPlugin, ServerAPI } from 'signalk-plugin-types';
+import { ServerPlugin, ServerAPI, ActionResult } from './index.d';
 import PouchDB from 'pouchdb';
 import path from 'path';
 import fs from 'fs';
@@ -343,7 +343,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
 
     //*** Course data processing ***
 
-    const handlePutCourseData= (context:string, path:string, value:any, cb:any) => {
+    const handlePutCourseData= (context:string, path:string, value:any, cb:any):ActionResult => {
         server.debug(` 
             ${JSON.stringify(path)}, 
             ${JSON.stringify(value)}`
