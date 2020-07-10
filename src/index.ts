@@ -18,6 +18,8 @@ import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
 import { GribStore } from './lib/gribfiles';
+import { TrackStore } from './lib/trackfiles';
+import { Utils} from './lib/utils';
 
 const CONFIG_SCHEMA= {
     properties: {
@@ -43,6 +45,7 @@ interface NavData {
 }
 
 module.exports = (server: ServerAPI): ServerPlugin=> {
+    let utils= new Utils();
     let settings= { path:'' };     // ** applied configuration settings          
     let subscriptions: Array<any>= []; // stream subscriptions   
     let timers: Array<any>= [];        // interval imers
@@ -57,6 +60,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         }        
     };          
     let grib: GribStore= new GribStore();
+    let tracks: TrackStore= new TrackStore();
    
     // ******** REQUIRED PLUGIN DEFINITION *******
     let plugin: ServerPlugin= {
@@ -94,6 +98,13 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 server.debug(`*** GRIB provider initialised... ${(!res.error) ? 'OK' : 'with errors!'}`);
             })
             .catch( (err:any)=> { server.debug(`*** GRIB ERROR: ${err} ***`) } );
+
+            tracks.init(basePath)
+            .then( res=> {
+                if(res.error) {server.debug(`*** TRACKS ERROR: ${res.message} ***`) }
+                server.debug(`*** TRACKS provider initialised... ${(!res.error) ? 'OK' : 'with errors!'}`);
+            })
+            .catch( (err:any)=> { server.debug(`*** TRACKS ERROR: ${err} ***`) } );            
             // **********                
             
             // **register HTTP PUT handlers
@@ -222,6 +233,66 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             }
             catch(err) { res.status(500).send('Error fetching resources!') }            
         });
+
+        // ** Tracks **
+        router.get('/resources/tracks', async (req:any, res:any)=> {
+            try {
+                let r= await tracks.getResources('tracks', null, {});
+                if(typeof r.error!=='undefined') { 
+                    res.status(r.status).send(r.message);
+                }
+                else { res.json(r) }
+            }
+            catch(err) { res.status(500).send('Error fetching resources!') }            
+        });
+        router.get(`/resources/tracks/*`, async (req:any, res:any)=> {
+            try {
+                let r= await tracks.getResources('tracks', req.path.split('/')[3], {});
+                if(typeof r.error!=='undefined') { 
+                    res.status(r.status).send(r.message);
+                }
+                else { res.json(r) } 
+            }
+            catch(err) { res.status(500).send('Error fetching resources!') }            
+        });
+        router.post(
+            `/resources/tracks`, 
+            async (req:any, res:any)=> {
+                let pArr:Array<any>= req.path.slice(1).split('/');
+                let id:string= pArr[pArr.length-1];
+                let pVal:any= {};
+                pVal[id]= (typeof req.body.value!=='undefined') ? req.body.value : req.body;
+                
+                actionTrackRequest('', 'tracks', pVal) 
+                .then( 
+                    (r:any)=> {
+                        if(r.statusCode>=400) { 
+                            res.status(r.statusCode).send(r.message);
+                        }
+                        else { res.json(r) }                    
+                    }
+                ).catch ( ()=> { res.status(500) } ) 
+            }
+        );
+        router.delete(
+            `/resources/tracks/${utils.uuidPrefix}*-*-*-*-*`, 
+            async (req:any, res:any)=> {
+                let pArr:Array<any>= req.path.slice(1).split('/');
+                let id:string= pArr[pArr.length-1];
+                let pVal:any= {};
+                pVal[id]= null;
+
+                actionTrackRequest('', 'tracks', pVal)
+                .then( 
+                    (r:any)=> {
+                        if(r.statusCode>=400) { 
+                            res.status(r.statusCode).send(r.message);
+                        }
+                        else { res.json(r) }                    
+                    }
+                ).catch ( ()=> { res.status(500) } )
+            }
+        );   
 
         return router;
     }
@@ -458,6 +529,48 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             return err;
         }
     }   
+
+    /** handle Track POST, DELETE requests **/
+    const actionTrackRequest= async ( context:string, path:string, value:any):Promise<ActionResult> => {
+        server.debug(`Path= ${JSON.stringify(path)}, value= ${JSON.stringify(value)}`) 
+        let r:any= {};
+        let result:ActionResult;
+  
+        let v:any= Object.entries(value);      // ** value= { uuid: { resource_data} }
+        r.id= v[0][0];                         // uuid
+        r.value= v[0][1];                      // resource_data
+        r.type= path;   // ** get resource type from path **
+
+        // ** test for valid resource identifier
+        if( !utils.isUUID(r.id) ) {
+            return { 
+                state: 'COMPLETED', 
+                statusCode: 400,
+                message: `Invalid resource id!` 
+            };
+        }
+        if(r.type=='tracks') {
+            let dbop= await db.setResource(r);        
+            if(typeof dbop.error==='undefined') { // OK
+                result= { state: 'COMPLETED', message:'COMPLETED', statusCode: 200 };
+            }
+            else {  // error
+                result= { 
+                    state: 'COMPLETED', 
+                    statusCode: 502,
+                    message: `Error updating resource!` 
+                };               
+            } 
+        }             
+        else {
+            result= { 
+                state: 'COMPLETED', 
+                statusCode: 400,
+                message: `Invalid resource type (${r.type})!` 
+            };
+        }
+        return result;
+    }
 
     // ******************************************
     return plugin;

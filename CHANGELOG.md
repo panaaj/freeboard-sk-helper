@@ -4,6 +4,8 @@
 
 - Port to Typescript.
 
+- **Experiment**: `resources/tracks` provider
+
 ### v1.0.0
 
 Initial release.
