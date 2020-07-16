@@ -20,6 +20,7 @@ import mkdirp from 'mkdirp';
 import { GribStore } from './lib/gribfiles';
 import { TrackStore } from './lib/trackfiles';
 import { Utils} from './lib/utils';
+import uuid from 'uuid';
 
 const CONFIG_SCHEMA= {
     properties: {
@@ -267,8 +268,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 let pArr:Array<any>= req.path.slice(1).split('/');
                 let id:string= pArr[pArr.length-1];
                 let pVal:any= {};
-                pVal[id]= (typeof req.body.value!=='undefined') ? req.body.value : req.body;
-                
+                pVal[id]= (typeof req.body.value!=='undefined') ? req.body.value : req.body;               
                 actionTrackRequest('', 'tracks', pVal) 
                 .then( 
                     (r:any)=> {
@@ -543,7 +543,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         let result:ActionResult;
   
         let v:any= Object.entries(value);      // ** value= { uuid: { resource_data} }
-        r.id= v[0][0];                         // uuid
+        r.id= (v[0][0]!='tracks') ? v[0][0] : utils.uuidPrefix + uuid();  // uuid
         r.value= v[0][1];                      // resource_data
         r.type= path;   // ** get resource type from path **
 
@@ -555,8 +555,9 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 message: `Invalid resource id!` 
             };
         }
-        if(r.type=='tracks') {
-            let dbop= await db.setResource(r);        
+
+        if(r.type=='tracks') {  
+            let dbop:any= await tracks.setResource(r); 
             if(typeof dbop.error==='undefined') { // OK
                 result= { state: 'COMPLETED', message:'COMPLETED', statusCode: 200 };
             }

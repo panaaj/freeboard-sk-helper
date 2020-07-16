@@ -61,9 +61,11 @@ export class TrackStore implements IResourceStore {
         let result:any= [];
         try {
             if(item) { // return specified track
+                let ia= item.split(':');
+                item= ia[ia.length-1];
                 try {
                     let p= this.resources[type].path;
-                    p= path.join(p, `${item}.json`);
+                    p= path.join(p, `${item}`);
                     let fc= JSON.parse(fs.readFileSync(p, 'utf8'));
                     if(params.section) { // return section
                         if(Array.isArray(params.section)){
@@ -158,7 +160,7 @@ export class TrackStore implements IResourceStore {
         else {  // ** add / update file
             return await (()=> {
                 return new Promise( resolve=> {
-                    if( !this.validateTrack(r) ) { // ** invalid track value **
+                    if( !this.validateTrack(r.value) ) { // ** invalid track value **
                         err.message= 'Invalid Track data!';
                         resolve(err);
                     }
