@@ -208,8 +208,6 @@ export class TrackStore implements IResourceStore {
 
     // ** validate track data
     validateTrack(trk:any):boolean {
-        if(typeof trk.name == 'undefined') { return false }
-        if(typeof trk.description == 'undefined') { return false }
 		try {
 			if(!trk.feature ) { //|| !geoJSON.valid(trk.feature)) { 
 				return false;
