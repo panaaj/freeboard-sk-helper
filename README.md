@@ -69,3 +69,8 @@ _Example: get first and third section of GRIB file 2019101200_
 `./resources/grib/2019101200:0-2`
 
 
+#### Tracks provider:
+
+Serves GeoJSON "MultiLineString" features to the path `./resources/tracks`in order to make imported Track data available from your Signal K server.
+
+`Freeboard-SK` v1.11.0 or greater with `Experiments` enabled will allow GPX Track data to be uploaded a the Signal K server with this plugin installed.
