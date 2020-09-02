@@ -67,16 +67,26 @@ export class TrackStore implements IResourceStore {
                     let p= this.resources[type].path;
                     p= path.join(p, `${item}`);
                     let fc= JSON.parse(fs.readFileSync(p, 'utf8'));
-                    if(params.section) { // return section
-                        if(Array.isArray(params.section)){
-                            params.section.forEach( (i:any)=> {
-                                let sno= parseInt(i);
-                                if(sno< fc.length) { result.push(fc[sno]) }
-                            })
+                    if(this.validateTrack(fc) ) {
+                        if(params.section) { // return section
+                            if(Array.isArray(params.section)) {
+                                params.section.forEach( (i:any)=> {
+                                    let sno= parseInt(i);
+                                    if(sno< fc.length) { result.push(fc[sno]) }
+                                });
+                            }
                         }
+                        else { result= fc }
                     }
-                    else { result= fc }   
-                    return result;                
+                    else {
+                        console.log('** ERROR **',`Invalid file contents!`);
+                        result= {
+                            message: `Invalid file contents!`,
+                            status: 400,
+                            error: true
+                        };                        
+                    }
+                    return result;         
                 }
                 catch(err) {
                     console.error('** ERROR **', err);
@@ -98,10 +108,12 @@ export class TrackStore implements IResourceStore {
                             let uuid= this.utils.uuidPrefix + files[f];
                             try {
                                 let res= JSON.parse(fs.readFileSync( path.join(rt[1].path, files[f]) , 'utf8'));
-                                result[uuid]= res;
-                                let stats = fs.statSync(path.join(rt[1].path, files[f]));
-                                result[uuid]['timestamp'] = stats.mtime;
-                                result[uuid]['$source'] = this.pkg.id;
+                                if(this.validateTrack(res) ) {
+                                    result[uuid]= res;
+                                    let stats = fs.statSync(path.join(rt[1].path, files[f]));
+                                    result[uuid]['timestamp'] = stats.mtime;
+                                    result[uuid]['$source'] = this.pkg.id;
+                                }
                             }
                             catch(err) {
                                 console.log(err);
@@ -209,12 +221,32 @@ export class TrackStore implements IResourceStore {
     // ** validate track data
     validateTrack(trk:any):boolean {
 		try {
-			if(!trk.feature ) { //|| !geoJSON.valid(trk.feature)) { 
-				return false;
-			}
+			if(!trk.feature ) { return false }
+            let f= trk.feature;
+            if(typeof f.type==='undefined') { return false }
+            if(f.type!='Feature') { return false }
+            if(!f.geometry) { return false } 
+            if(!f.geometry.type) { return false }
+            if(f.geometry.type!='MultiLineString') { return false }
+            if(!f.geometry.coordinates) { return false }
+            if(!Array.isArray(f.geometry.coordinates)) { return false }
+            let coordsCheck= true;
+            f.geometry.coordinates.forEach( (l:any)=> {
+                if(!Array.isArray(l)) { coordsCheck= coordsCheck && false }
+                l.forEach( (p:any)=> {
+                    if(!Array.isArray(p)) { coordsCheck= coordsCheck && false }
+                    if(p.length<2) { coordsCheck= coordsCheck && false } 
+                    if(typeof p[0]!=='number' || typeof p[1]!=='number') { 
+                        coordsCheck= coordsCheck && false;
+                    }
+                });
+            });
+            return coordsCheck;
 		}
-		catch(e) { console.log(e); return false }
-        return true;
+        catch(e) { console.log(e); return false }
+        finally {
+            console.log('** TRACK VALIDATE COMPLETE **');
+        }
     }
 
 }
