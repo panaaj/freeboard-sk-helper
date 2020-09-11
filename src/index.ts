@@ -42,6 +42,7 @@ interface NavData {
     };
     nextPoint: { 
         position: any;
+        arrivalCircle: number | null;
     }        
 }
 
@@ -57,7 +58,8 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             startTime: null
         },
         nextPoint: { 
-            position: null
+            position: null,
+            arrivalCircle: null
         }        
     };          
     let grib: GribStore= new GribStore();
@@ -132,6 +134,11 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                     'navigation.courseGreatCircle.nextPoint.position',
                     handlePutCourseData
                 );
+                server.registerPutHandler(
+                    'vessels.self',
+                    'navigation.courseGreatCircle.nextPoint.arrivalCircle',
+                    handlePutCourseData
+                );                
             } 
 
             // ** register STREAM UPDATE message handlers
@@ -172,6 +179,13 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                     } 
                 })
             )  
+            subscriptions.push( // ** handle nextPoint.arrivalCircle Update
+                server.streambundle.getSelfBus('navigation.courseGreatCircle.nextPoint.arrivalCircle')
+                .onValue( (v:any)=> {     
+                    if(v['$source']==plugin.id) { return }
+                    setArrivalCircle(v.value)   
+                })
+            )              
             server.setProviderStatus('Started');	
         } 
         catch(err) {
@@ -441,8 +455,11 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             if(p[p.length-1]=='startTime') { ok= setActiveRoute(value, 'startTime') }
         }        
         if(p[2]=='nextPoint') {
+            console.log(p);
             if(p[p.length-1]=='position') { ok= setNextPoint(value) }
-        }      
+            if(p[p.length-1]=='arrivalCircle') { ok= setArrivalCircle(value) }
+        }   
+
         if(ok) {
             // persist navData values
             if(db) { 
@@ -490,6 +507,14 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 typeof value.longitude === 'undefined') { return false }
         }
         navData.nextPoint.position= value;
+        return true;
+    }
+
+    const setArrivalCircle= (value:any)=> {
+        console.log('** setArrivalCircle **');
+        console.log(value);
+        if(value!== null && typeof value !=='number') { return false }
+        navData.nextPoint.arrivalCircle= value;
         return true;
     }
 
