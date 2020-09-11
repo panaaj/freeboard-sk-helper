@@ -22,6 +22,21 @@ import { TrackStore } from './lib/trackfiles';
 import { Utils} from './lib/utils';
 import uuid from 'uuid';
 
+enum ALARM_STATE {
+    nominal = 'nominal',
+    normal = 'normal',
+    alert = 'alert',
+    warn = 'warn',
+    alarm = 'alarm',
+    emergency = 'emergency'
+}
+
+enum ALARM_METHOD {
+    visual = 'visual', 
+    sound = 'sound'
+}
+
+
 const CONFIG_SCHEMA= {
     properties: {
         navData: {
@@ -149,21 +164,21 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                     if(v['$source']==plugin.id) { return }
                     setActiveRoute(v.value)                 
                 })
-            )
+            );
             subscriptions.push( // ** handle activeRoute.startTime Update
                 server.streambundle.getSelfBus('navigation.courseGreatCircle.activeRoute.startTime')
                 .onValue( (v:any)=> {     
                     if(v['$source']==plugin.id) { return }
                     setActiveRoute(v.value)   
                 })
-            )   
+            );
             subscriptions.push( 
                 server.streambundle.getSelfBus('navigation.courseGreatCircle.nextPoint.position')
                 .onValue( (v:any)=> {     
                     if(v['$source']==plugin.id) { return }
                     setNextPoint(v.value);   
                 })
-            ) 
+            );
             subscriptions.push( // ** handle navigation.position. calc bearingTrue
                 server.streambundle.getSelfBus('navigation.position')
                 .onValue( (v:any)=> {     
@@ -178,14 +193,26 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                         server.handleMessage(plugin.id, {updates: [ {values: [val] } ] });                                                       
                     } 
                 })
-            )  
+            );
             subscriptions.push( // ** handle nextPoint.arrivalCircle Update
                 server.streambundle.getSelfBus('navigation.courseGreatCircle.nextPoint.arrivalCircle')
                 .onValue( (v:any)=> {     
                     if(v['$source']==plugin.id) { return }
                     setArrivalCircle(v.value)   
                 })
-            )              
+            );  
+            subscriptions.push( // ** monitor nextPoint.distance updates
+                server.streambundle.getSelfBus('navigation.courseGreatCircle.nextPoint.distance')
+                .onValue( (v:any)=> {     
+                    if(navData.nextPoint.arrivalCircle && 
+                        (v.value < navData.nextPoint.arrivalCircle) ) {
+                        sendNotification('arrivalCircleEntered',
+                            ALARM_STATE.alarm, 
+                            'Approaching destination',
+                            [ALARM_METHOD.sound, ALARM_METHOD.visual]); 
+                    }
+                })
+            );            
             server.setProviderStatus('Started');	
         } 
         catch(err) {
@@ -516,6 +543,26 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         if(value!== null && typeof value !=='number') { return false }
         navData.nextPoint.arrivalCircle= value;
         return true;
+    }
+
+    const sendNotification= (   path:string, 
+                                state:ALARM_STATE, 
+                                msg:string, 
+                                method: Array<ALARM_METHOD> )=> {
+        if (!msg) {msg = `${path} - ${state}` }
+        let delta= {
+            "updates": [{
+                "values": [{
+                    "path": `notifications.${path}`,
+                    "value": {
+                        "state": state,
+                        "method": method,
+                        "message": msg,
+                    }
+                }]
+            }]
+        }
+        server.handleMessage(plugin.id, delta);
     }
 
     //*** persist / retrieve settings ***
