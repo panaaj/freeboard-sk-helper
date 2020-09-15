@@ -21,20 +21,8 @@ import { GribStore } from './lib/gribfiles';
 import { TrackStore } from './lib/trackfiles';
 import { Utils} from './lib/utils';
 import uuid from 'uuid';
-
-enum ALARM_STATE {
-    nominal = 'nominal',
-    normal = 'normal',
-    alert = 'alert',
-    warn = 'warn',
-    alarm = 'alarm',
-    emergency = 'emergency'
-}
-
-enum ALARM_METHOD {
-    visual = 'visual', 
-    sound = 'sound'
-}
+import { ALARM_METHOD, ALARM_STATE, Watcher,
+        DeltaMessage, DeltaUpdate, Notification } from './lib/alarms';
 
 
 const CONFIG_SCHEMA= {
@@ -62,6 +50,7 @@ interface NavData {
 }
 
 module.exports = (server: ServerAPI): ServerPlugin=> {
+    let watcher= new Watcher();     // watch distance from arrivalCircle 
     let utils= new Utils();
     let settings= { path:'' };     // ** applied configuration settings          
     let subscriptions: Array<any>= []; // stream subscriptions   
@@ -204,16 +193,12 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             subscriptions.push( // ** monitor nextPoint.distance updates
                 server.streambundle.getSelfBus('navigation.courseGreatCircle.nextPoint.distance')
                 .onValue( (v:any)=> {     
-                    if(navData.nextPoint.arrivalCircle && 
-                        (v.value < navData.nextPoint.arrivalCircle) ) {
-                        sendNotification('arrivalCircleEntered',
-                            ALARM_STATE.alarm, 
-                            'Approaching destination',
-                            [ALARM_METHOD.sound, ALARM_METHOD.visual]); 
+                    if(navData.nextPoint.arrivalCircle) {
+                        watcher.value= v.value;
                     }
                 })
             );            
-            server.setProviderStatus('Started');	
+            server.setProviderStatus('Started');
         } 
         catch(err) {
             server.setProviderError(`Started with errors!`);
@@ -221,7 +206,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             server.error(err.stack);
             return err;
         }          
-    }
+    }  
 
     const doShutdown= ()=> { 
         server.debug("** shutting down **");
@@ -399,18 +384,68 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
 
     // ** additional plugin start processing 
     const afterStart= async ()=> {
-        server.debug('** afterStart() **');
         // ** Get persisted COURSE data and UPDATE cache
         if(db) { 
             let result= await getRecord(db, 'navData');
-            if(result.error) { server.debug('** No persisted NavData **') }
+            if(result.error) { console.log('** No persisted NavData **') }
             else { 
                 navData= result;
+                watcher.rangeMax= result.nextPoint.arrivalCircle;
                 emitCourseData();
             }
         }         
-        timers.push( setInterval( emitCourseData, 30000 ) )    
+        timers.push( setInterval( emitCourseData, 30000 ) );
+        //test
+        //doTest();
     }
+
+    /*
+    const doTest= ()=> {
+        console.log('** STARTING TEST **');
+        //watcher.sampleSize= 2;
+        console.log(navData);
+        let v= [250,150];
+        let idx=0;
+        setInterval( ()=> {
+            watcher.value= v[idx];
+            idx= (idx==4) ? 0 : idx+1;
+        }, 5000);
+    }
+    */
+    // **************************
+
+    watcher.onEnterRange= (val:number)=> {
+        console.log(`Approaching Destination: ${val} < (${navData.nextPoint.arrivalCircle})`);
+        emitNotification( 
+            new Notification(
+                'arrivalCircleEntered',
+                `Approaching Destination!`,
+                ALARM_STATE.alarm, 
+                [ALARM_METHOD.sound, ALARM_METHOD.visual]
+            )
+        );          
+    }
+
+    watcher.onExitRange= (val:number)=> {
+        emitNotification( 
+            new Notification(
+                'arrivalCircleEntered',
+                `${val} > (${navData.nextPoint.arrivalCircle})`,
+                ALARM_STATE.normal, 
+                []
+            )
+        );        
+    }    
+
+    // ** send notification delta **
+    const emitNotification= (n:Notification)=> {
+        let delta:DeltaUpdate= {
+            updates: [{
+                values: [n.message]
+            }]
+        }
+        server.handleMessage(plugin.id, delta);
+    }      
 
     // ****************************************
 
@@ -418,7 +453,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     // ** emit delta UPDATE message for persisted COURSE data 
     const emitCourseData= ()=> {
         // ** send delta **
-        let val: Array<any>= [];
+        let val: Array<DeltaMessage>= [];
         if(typeof navData.activeRoute.href!== 'undefined') {
             val.push({
                 path: 'navigation.courseGreatCircle.activeRoute.href', 
@@ -436,7 +471,13 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 path: 'navigation.courseGreatCircle.nextPoint.position', 
                 value: navData.nextPoint.position
             });                                
-        }       
+        }
+        if(typeof navData.nextPoint.arrivalCircle!== 'undefined') {
+            val.push({
+                path: 'navigation.courseGreatCircle.nextPoint.arrivalCircle', 
+                value: navData.nextPoint.arrivalCircle
+            });                                
+        }             
         if(val.length!=0) {
             server.debug(`****** Emitting COURSE data: ******`);
             server.debug(JSON.stringify(val));
@@ -482,7 +523,6 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             if(p[p.length-1]=='startTime') { ok= setActiveRoute(value, 'startTime') }
         }        
         if(p[2]=='nextPoint') {
-            console.log(p);
             if(p[p.length-1]=='position') { ok= setNextPoint(value) }
             if(p[p.length-1]=='arrivalCircle') { ok= setArrivalCircle(value) }
         }   
@@ -513,9 +553,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     }
 
     const setActiveRoute= (value:any, key?:string)=> {
-        server.debug('** setActiveRoute **');
-        server.debug(key ? key : 'no key');
-        server.debug(value);
+        console.log('** setActiveRoute **', key ? key : 'no key');
         if(key=='href') { 
             navData.activeRoute.href= value;
             let dt= new Date();
@@ -527,8 +565,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     }    
 
     const setNextPoint= (value:any)=> {
-        server.debug('** setNextPoint **');
-        server.debug(value);
+        console.log('** setNextPoint **', value)
         if(value) {
             if(typeof value.latitude === 'undefined' || 
                 typeof value.longitude === 'undefined') { return false }
@@ -538,31 +575,11 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     }
 
     const setArrivalCircle= (value:any)=> {
-        console.log('** setArrivalCircle **');
-        console.log(value);
+        console.log('** setArrivalCircle **', value);
         if(value!== null && typeof value !=='number') { return false }
         navData.nextPoint.arrivalCircle= value;
+        watcher.rangeMax= value;
         return true;
-    }
-
-    const sendNotification= (   path:string, 
-                                state:ALARM_STATE, 
-                                msg:string, 
-                                method: Array<ALARM_METHOD> )=> {
-        if (!msg) {msg = `${path} - ${state}` }
-        let delta= {
-            "updates": [{
-                "values": [{
-                    "path": `notifications.${path}`,
-                    "value": {
-                        "state": state,
-                        "method": method,
-                        "message": msg,
-                    }
-                }]
-            }]
-        }
-        server.handleMessage(plugin.id, delta);
     }
 
     //*** persist / retrieve settings ***
