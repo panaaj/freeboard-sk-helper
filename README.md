@@ -23,7 +23,9 @@ _HTTP: (GET/PUT)_
 
 ./vesels/self/navigation/courseGreatCircle/activeRoute/startTime
 
-./vesels/self/navigation/courseGreatCircle/nextPoint/position   
+./vesels/self/navigation/courseGreatCircle/nextPoint/position
+
+./vesels/self/navigation/courseGreatCircle/nextPoint/arrivalCircle
 ```
 
 _Stream:_
@@ -33,6 +35,8 @@ vessels.self.navigation.courseGreatCircle.activeRoute.href
 vessels.self.navigation.courseGreatCircle.activeRoute.startTime
 
 vessels.self.navigation.courseGreatCircle.nextPoint.position
+
+vessels.self.navigation.courseGreatCircle.nextPoint.arrivalCircle
 ```
 
 _Deltas: (sent for the following paths)_
@@ -42,10 +46,24 @@ navigation.courseGreatCircle.activeRoute.href
 navigation.courseGreatCircle.activeRoute.startTime
 
 navigation.courseGreatCircle.nextPoint.position
+
+navigation.courseGreatCircle.nextPoint.arrivalCircle
+```
+
+Notifications: (sent for the following paths)_
+```
+navigation.arrivalCircleEntered
 ```
 
 ---
 ### Experiments:
+
+#### Arrival Alarm:
+
+Serves as a provider for the path `navigation.courseGreatCircle.nextPoint.arrivalCircle` to enable the radius of the circle surrounding the active destination to be defined.
+
+This radius is then used to send a notification using the path `navigation.arrivalCircleEntered` to notify that the vessel has entered the arrival circle.
+
 
 #### GRIB2JSON file provision:
 
