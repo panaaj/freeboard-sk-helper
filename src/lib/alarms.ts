@@ -26,7 +26,7 @@ export interface DeltaMessage {
 
 export class Notification {
 
-    public message: DeltaMessage= {
+    private _message: DeltaMessage= {
         path: `notifications.`,
         value: {
             state: ALARM_STATE.alarm,
@@ -36,13 +36,52 @@ export class Notification {
     }
 
     constructor (path:string, msg:string, state?:ALARM_STATE, method?:Array<ALARM_METHOD>) {
-        this.message.path+= path;
-        this.message.value.message= msg;
-        if(state) { this.message.value.state= state }
-        if(method) { this.message.value.method= method }
+        this._message.path+= path;
+        this._message.value.message= msg;
+        if(state) { this._message.value.state= state }
+        if(method) { this._message.value.method= method }
     }
+
+    get message():DeltaMessage { return this._message }
 }
 
+
+// ** manage notification transmission **
+export class Notifier {
+    private _period:number= 30000;    //number of milliseconds to emit notification
+    public notification: Notification | undefined;
+    private _timer: any= null;
+
+    constructor() { }
+
+    set period(val:number) { 
+        if(typeof val== 'number' && val>=500) {
+            this._period= val;
+            if(this._timer) { this.start() }    // restart
+        }
+            
+    }
+    get period():number { return this._period }
+
+    start() {
+        this.stop();
+        this._timer= setInterval(
+            ()=> { 
+                if(this.notification) { this.notify(this.notification.message) }
+            },
+            this._period
+        );
+    }
+
+    stop() { 
+        if(this._timer) { 
+            clearInterval(this._timer);
+            this._timer= null;
+        } 
+    }
+    // callback 
+    public notify(msg:any) { if(msg) { console.log(msg) } }
+}
 
 // ** watch a value within a range (min-max)
 export class Watcher {
@@ -84,30 +123,38 @@ export class Watcher {
         if(this._sampleCount < this._sampleSize) { return }
         if( this.isInRange(val) ) { //new value is in range
             if( !this.isInRange(this._val) ) { // ** was previously outside range
-                //console.log(`In range (${val}), was previously outside range (${this._val})`);
                 this.onEnterRange( val, (this._val<this.rangeMin) ? true : false );
             }
             else { // was already in range
-                this.onUpdate(val);
+                this.onInRange(val);
             }
         }
         else {  // ** new value is out of range
             if( this.isInRange(this._val) ) { // ** was previously in range
-                //console.log(`Out of range (${val}), was previously in range (${this._val})`);
                 this.onExitRange( val, (val<this.rangeMin) ? true : false );
-            }
-            else { // was already out of range
-                this.onUpdate(val);
             }
         }
         this._val= val;
         this._sampleCount= 0;
     }
 
-    // ** onUpdate callback - new value in range **
-    public onUpdate(val:number) { }
-    // ** onEnterRange callback - fromBelow: true - prev value was below range **
+    /** onInRange callback - raised when supplied value is in range 
+     *                       and previous value was also in range.
+     * @param val: current value
+     * **/
+    public onInRange(val:number) { }
+
+    /** onEnterRange callback - raised when previous value was out of range 
+     *                          and new value is in range.
+     * @param val: current value
+     * @param fromBelow: true - previous value was below range, false - previous value was above range
+     * **/
     public onEnterRange(val:number, fromBelow?:boolean) { }
-    // ** onExitRange callback - below: true - new value is below range **
+
+    /** onExitRange callback - raised when previous value was in range 
+     *                          and current value is out of range.
+     * @param val: current value
+     * @param below: true - current value is below range, false - current value is above range 
+    **/
     public onExitRange(val:number, below?:boolean) { }
 }
