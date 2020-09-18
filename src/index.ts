@@ -21,7 +21,7 @@ import { GribStore } from './lib/gribfiles';
 import { TrackStore } from './lib/trackfiles';
 import { Utils} from './lib/utils';
 import uuid from 'uuid';
-import { ALARM_METHOD, ALARM_STATE, Watcher,
+import { ALARM_METHOD, ALARM_STATE, Watcher, Notifier,
         DeltaMessage, DeltaUpdate, Notification } from './lib/alarms';
 
 
@@ -50,7 +50,8 @@ interface NavData {
 }
 
 module.exports = (server: ServerAPI): ServerPlugin=> {
-    let watcher= new Watcher();     // watch distance from arrivalCircle 
+    let watcher: Watcher= new Watcher();     // watch distance from arrivalCircle 
+    let notifier: Notifier= new Notifier();  // sends notifications
     let utils= new Utils();
     let settings= { path:'' };     // ** applied configuration settings          
     let subscriptions: Array<any>= []; // stream subscriptions   
@@ -396,22 +397,26 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         }         
         timers.push( setInterval( emitCourseData, 30000 ) );
         //test
-        //doTest();
+         doTest();
     }
 
-    /*
+    
     const doTest= ()=> {
         console.log('** STARTING TEST **');
-        //watcher.sampleSize= 2;
+        setArrivalCircle(200);
         console.log(navData);
-        let v= [250,150];
+        
+        notifier.period= 2000;
+        notifier.notify= (msg)=> { emitNotification(msg) }   
+ 
+        let v= [250,150,130,130,250,250,250];
         let idx=0;
         setInterval( ()=> {
             watcher.value= v[idx];
             idx= (idx==4) ? 0 : idx+1;
         }, 5000);
     }
-    */
+    
     // **************************
 
     watcher.onEnterRange= (val:number)=> {
@@ -420,10 +425,11 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             new Notification(
                 'arrivalCircleEntered',
                 `Approaching Destination!`,
-                ALARM_STATE.alarm, 
+                ALARM_STATE.warn, 
                 [ALARM_METHOD.sound, ALARM_METHOD.visual]
             )
-        );          
+        ); 
+        notifier.start();         
     }
 
     watcher.onExitRange= (val:number)=> {
@@ -434,15 +440,25 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 ALARM_STATE.normal, 
                 []
             )
-        );        
-    }    
+        );
+        notifier.stop();      
+    }
+
+    watcher.onInRange= (val:number)=> {
+        notifier.notification= new Notification(
+            'arrivalCircleEntered',
+            `${val} (in range)`,
+            ALARM_STATE.warn, 
+            [ALARM_METHOD.sound, ALARM_METHOD.visual]
+        );    
+    }      
 
     // ** send notification delta **
-    const emitNotification= (n:Notification)=> {
+    const emitNotification= (n:Notification | DeltaMessage)=> {
+        let msg:DeltaMessage= (n instanceof Notification) ? n.message : n;
+        console.log(msg);
         let delta:DeltaUpdate= {
-            updates: [{
-                values: [n.message]
-            }]
+            updates: [{ values: [msg] }]
         }
         server.handleMessage(plugin.id, delta);
     }      
