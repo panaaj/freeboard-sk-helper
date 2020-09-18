@@ -50,19 +50,20 @@ navigation.courseGreatCircle.nextPoint.position
 navigation.courseGreatCircle.nextPoint.arrivalCircle
 ```
 
-Notifications: (sent for the following paths)_
-```
-navigation.arrivalCircleEntered
-```
-
----
-### Experiments:
 
 #### Arrival Alarm:
 
 Serves as a provider for the path `navigation.courseGreatCircle.nextPoint.arrivalCircle` to enable the radius of the circle surrounding the active destination to be defined.
 
 This radius is then used to send a notification using the path `navigation.arrivalCircleEntered` to notify that the vessel has entered the arrival circle.
+
+_Notifications: (sent for the following paths)_
+```
+navigation.arrivalCircleEntered
+```
+
+---
+### Experiments:
 
 
 #### GRIB2JSON file provision:
