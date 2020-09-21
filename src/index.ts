@@ -396,35 +396,15 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             }
         }         
         timers.push( setInterval( emitCourseData, 30000 ) );
-        //test
-         doTest();
-    }
-
-    
-    const doTest= ()=> {
-        console.log('** STARTING TEST **');
-        setArrivalCircle(200);
-        console.log(navData);
-        
-        notifier.period= 2000;
-        notifier.notify= (msg)=> { emitNotification(msg) }   
- 
-        let v= [250,150,130,130,250,250,250];
-        let idx=0;
-        setInterval( ()=> {
-            watcher.value= v[idx];
-            idx= (idx==4) ? 0 : idx+1;
-        }, 5000);
     }
     
     // **************************
 
     watcher.onEnterRange= (val:number)=> {
-        console.log(`Approaching Destination: ${val} < (${navData.nextPoint.arrivalCircle})`);
         emitNotification( 
             new Notification(
                 'arrivalCircleEntered',
-                `Approaching Destination!`,
+                `Approaching Destination: ${val}m`,
                 ALARM_STATE.warn, 
                 [ALARM_METHOD.sound, ALARM_METHOD.visual]
             )
@@ -447,7 +427,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     watcher.onInRange= (val:number)=> {
         notifier.notification= new Notification(
             'arrivalCircleEntered',
-            `${val} (in range)`,
+            `Approaching Destination: ${val}m`,
             ALARM_STATE.warn, 
             [ALARM_METHOD.sound, ALARM_METHOD.visual]
         );    
