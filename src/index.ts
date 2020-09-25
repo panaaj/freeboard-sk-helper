@@ -211,12 +211,13 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
 
     const doShutdown= ()=> { 
         server.debug("** shutting down **");
-        server.debug('** Un-registering Update Handler(s) **')
-        subscriptions.forEach( b=> b() )
-        subscriptions= []
-        server.debug('** Stopping Timer(s) **')
-        timers.forEach( t=> clearInterval(t) )
-        timers= []     
+        server.debug('** Un-registering Update Handler(s) **');
+        subscriptions.forEach( b=> b() );
+        subscriptions= [];
+        server.debug('** Stopping Timer(s) **');
+        timers.forEach( t=> clearInterval(t) );
+        timers= [];
+        notifier.stop();
         if(db) { db.close().then( ()=> server.debug(`** ${db[0]} DB closed **`) ) }
         server.setProviderStatus('Stopped');        
     }
