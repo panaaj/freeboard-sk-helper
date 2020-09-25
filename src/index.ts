@@ -398,7 +398,16 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         timers.push( setInterval( emitCourseData, 30000 ) );
     }
     
-    // **************************
+    // ********* Arrival circle events *****************
+
+    watcher.onInRange= (val:number)=> {
+        notifier.notification= new Notification(
+            'arrivalCircleEntered',
+            `Approaching Destination: ${val}m`,
+            ALARM_STATE.warn, 
+            [ALARM_METHOD.sound, ALARM_METHOD.visual]
+        );    
+    }  
 
     watcher.onEnterRange= (val:number)=> {
         emitNotification( 
@@ -422,21 +431,11 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             )
         );
         notifier.stop();      
-    }
+    }    
 
-    watcher.onInRange= (val:number)=> {
-        notifier.notification= new Notification(
-            'arrivalCircleEntered',
-            `Approaching Destination: ${val}m`,
-            ALARM_STATE.warn, 
-            [ALARM_METHOD.sound, ALARM_METHOD.visual]
-        );    
-    }      
-
-    // ** send notification delta **
+    // ** send notification delta message **
     const emitNotification= (n:Notification | DeltaMessage)=> {
         let msg:DeltaMessage= (n instanceof Notification) ? n.message : n;
-        console.log(msg);
         let delta:DeltaUpdate= {
             updates: [{ values: [msg] }]
         }
