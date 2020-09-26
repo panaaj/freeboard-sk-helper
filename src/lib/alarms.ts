@@ -1,32 +1,8 @@
-
-export enum ALARM_STATE {
-    nominal = 'nominal',
-    normal = 'normal',
-    alert = 'alert',
-    warn = 'warn',
-    alarm = 'alarm',
-    emergency = 'emergency'
-}
-
-export enum ALARM_METHOD {
-    visual = 'visual', 
-    sound = 'sound'
-}
-
-export interface DeltaUpdate {
-    updates: [{
-        values: Array<DeltaMessage>
-    }]
-}
-
-export interface DeltaMessage {
-    path: string; 
-    value: any;
-}
+import { ALARM_METHOD, ALARM_STATE, DeltaNotification } from '@panaaj/sk-types';
 
 export class Notification {
 
-    private _message: DeltaMessage= {
+    private _message: DeltaNotification= {
         path: `notifications.`,
         value: {
             state: ALARM_STATE.alarm,
@@ -42,7 +18,7 @@ export class Notification {
         if(method) { this._message.value.method= method }
     }
 
-    get message():DeltaMessage { return this._message }
+    get message():DeltaNotification { return this._message }
 }
 
 

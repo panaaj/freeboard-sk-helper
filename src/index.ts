@@ -12,7 +12,7 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { ServerPlugin, ServerAPI, ActionResult } from './index.d';
+import { ServerPlugin, ServerAPI, ActionResult } from '@panaaj/sk-types';
 import PouchDB from 'pouchdb';
 import path from 'path';
 import fs from 'fs';
@@ -21,8 +21,8 @@ import { GribStore } from './lib/gribfiles';
 import { TrackStore } from './lib/trackfiles';
 import { Utils} from './lib/utils';
 import uuid from 'uuid';
-import { ALARM_METHOD, ALARM_STATE, Watcher, Notifier,
-        DeltaMessage, DeltaUpdate, Notification } from './lib/alarms';
+import { Watcher, Notifier, Notification } from './lib/alarms';
+import { ALARM_METHOD, ALARM_STATE, DeltaMessage, DeltaUpdate } from '@panaaj/sk-types';
 
 
 const CONFIG_SCHEMA= {
@@ -477,7 +477,8 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         if(val.length!=0) {
             server.debug(`****** Emitting COURSE data: ******`);
             server.debug(JSON.stringify(val));
-            server.handleMessage(plugin.id, {updates: [ {values: val} ] }); 
+            let msg: DeltaUpdate= {updates: [ {values: val} ] }
+            server.handleMessage(plugin.id, msg); 
         }
     }
 
