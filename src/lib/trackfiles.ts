@@ -2,9 +2,9 @@
 import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
-import { IResourceStore } from '../index.d';
+import { IResourceStore } from '../types/';
 import { Utils} from './utils';
-//import geoJSON from 'geojson-validation';
+import geoJSON from 'geojson-validation';
 
 // ** Track Store Class
 export class TrackStore implements IResourceStore {
@@ -221,27 +221,9 @@ export class TrackStore implements IResourceStore {
     // ** validate track data
     validateTrack(trk:any):boolean {
 		try {
-			if(!trk.feature ) { return false }
-            let f= trk.feature;
-            if(typeof f.type==='undefined') { return false }
-            if(f.type!='Feature') { return false }
-            if(!f.geometry) { return false } 
-            if(!f.geometry.type) { return false }
-            if(f.geometry.type!='MultiLineString') { return false }
-            if(!f.geometry.coordinates) { return false }
-            if(!Array.isArray(f.geometry.coordinates)) { return false }
-            let coordsCheck= true;
-            f.geometry.coordinates.forEach( (l:any)=> {
-                if(!Array.isArray(l)) { coordsCheck= coordsCheck && false }
-                l.forEach( (p:any)=> {
-                    if(!Array.isArray(p)) { coordsCheck= coordsCheck && false }
-                    if(p.length<2) { coordsCheck= coordsCheck && false } 
-                    if(typeof p[0]!=='number' || typeof p[1]!=='number') { 
-                        coordsCheck= coordsCheck && false;
-                    }
-                });
-            });
-            return coordsCheck;
+            if(!trk.feature ) { return false }
+            if(trk.feature.geometry.type!='MultiLineString') { return false }
+            return geoJSON.valid(trk.feature);
 		}
         catch(e) { console.log(e); return false }
         finally {

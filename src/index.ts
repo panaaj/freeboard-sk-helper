@@ -12,7 +12,9 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-import { ServerPlugin, ServerAPI, ActionResult } from '@panaaj/sk-types';
+import { ServerPlugin, ServerAPI, ActionResult, 
+        ALARM_METHOD, ALARM_STATE, 
+        DeltaMessage, DeltaUpdate } from './types/signalk/server';
 import PouchDB from 'pouchdb';
 import path from 'path';
 import fs from 'fs';
@@ -22,7 +24,6 @@ import { TrackStore } from './lib/trackfiles';
 import { Utils} from './lib/utils';
 import uuid from 'uuid';
 import { Watcher, Notifier, Notification } from './lib/alarms';
-import { ALARM_METHOD, ALARM_STATE, DeltaMessage, DeltaUpdate } from '@panaaj/sk-types';
 
 
 const CONFIG_SCHEMA= {
@@ -30,7 +31,7 @@ const CONFIG_SCHEMA= {
         navData: {
             title: "Course",
             type: "object",
-            description: 'Provider for: courseGreatCircle: activeRoute, nextPoint',
+            description: 'Provider for: courseGreatCircle: activeRoute, nextPoint, previousPoint',
         }          
     }
 }
@@ -46,6 +47,9 @@ interface NavData {
     nextPoint: { 
         position: any;
         arrivalCircle: number | null;
+    };
+    previousPoint: { 
+        position: any;
     }        
 }
 
@@ -65,7 +69,10 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         nextPoint: { 
             position: null,
             arrivalCircle: null
-        }        
+        },
+        previousPoint: { 
+            position: null
+        }     
     };          
     let grib: GribStore= new GribStore();
     let tracks: TrackStore= new TrackStore();
@@ -143,7 +150,12 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                     'vessels.self',
                     'navigation.courseGreatCircle.nextPoint.arrivalCircle',
                     handlePutCourseData
-                );                
+                );
+                server.registerPutHandler(
+                    'vessels.self',
+                    'navigation.courseGreatCircle.previousPoint.position',
+                    handlePutCourseData
+                );                               
             } 
 
             // ** register STREAM UPDATE message handlers
@@ -169,6 +181,13 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                     setNextPoint(v.value);   
                 })
             );
+            subscriptions.push( 
+                server.streambundle.getSelfBus('navigation.courseGreatCircle.previousPoint.position')
+                .onValue( (v:any)=> {     
+                    if(v['$source']==plugin.id) { return }
+                    setPreviousPoint(v.value);   
+                })
+            );            
             subscriptions.push( // ** handle navigation.position. calc bearingTrue
                 server.streambundle.getSelfBus('navigation.position')
                 .onValue( (v:any)=> {     
@@ -480,6 +499,12 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             let msg: DeltaUpdate= {updates: [ {values: val} ] }
             server.handleMessage(plugin.id, msg); 
         }
+        if(typeof navData.previousPoint.position!== 'undefined') {
+            val.push({
+                path: 'navigation.courseGreatCircle.previousPoint.position', 
+                value: navData.previousPoint.position
+            });                                
+        }        
     }
 
     //*** Calculate the bearing between two points in radians ***
@@ -522,7 +547,10 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         if(p[2]=='nextPoint') {
             if(p[p.length-1]=='position') { ok= setNextPoint(value) }
             if(p[p.length-1]=='arrivalCircle') { ok= setArrivalCircle(value) }
-        }   
+        }
+        if(p[2]=='previousPoint') {
+            if(p[p.length-1]=='position') { ok= setPreviousPoint(value) }
+        }          
 
         if(ok) {
             // persist navData values
@@ -570,6 +598,16 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         navData.nextPoint.position= value;
         return true;
     }
+
+    const setPreviousPoint= (value:any)=> {
+        console.log('** setPreviousPoint **', value)
+        if(value) {
+            if(typeof value.latitude === 'undefined' || 
+                typeof value.longitude === 'undefined') { return false }
+        }
+        navData.previousPoint.position= value;
+        return true;
+    }    
 
     const setArrivalCircle= (value:any)=> {
         console.log('** setArrivalCircle **', value);
