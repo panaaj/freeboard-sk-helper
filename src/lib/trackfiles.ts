@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
-import { IResourceStore } from '../types/';
+import { IResourceStore } from '../types';
 import { Utils} from './utils';
 import geoJSON from 'geojson-validation';
 

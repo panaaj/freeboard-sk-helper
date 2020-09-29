@@ -2,7 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import mkdirp from 'mkdirp';
-import { IResourceStore } from '../types/';
+import { IResourceStore } from '../types';
 
 // ** GRIB Store Class
 export class GribStore implements IResourceStore {
