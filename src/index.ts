@@ -492,19 +492,20 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 path: 'navigation.courseGreatCircle.nextPoint.arrivalCircle', 
                 value: navData.nextPoint.arrivalCircle
             });                                
-        }             
+        }     
+        if(typeof navData.previousPoint.position!== 'undefined') {
+            val.push({
+                path: 'navigation.courseGreatCircle.previousPoint.position', 
+                value: navData.previousPoint.position
+            });                                
+        }  
         if(val.length!=0) {
             server.debug(`****** Emitting COURSE data: ******`);
             server.debug(JSON.stringify(val));
             let msg: DeltaUpdate= {updates: [ {values: val} ] }
             server.handleMessage(plugin.id, msg); 
         }
-        if(typeof navData.previousPoint.position!== 'undefined') {
-            val.push({
-                path: 'navigation.courseGreatCircle.previousPoint.position', 
-                value: navData.previousPoint.position
-            });                                
-        }        
+      
     }
 
     //*** Calculate the bearing between two points in radians ***
