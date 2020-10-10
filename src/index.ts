@@ -410,6 +410,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             let result= await getRecord(db, 'navData');
             if(result.error) { console.log('** No persisted NavData **') }
             else { 
+                if(!result.previousPoint) { result.previousPoint= null }
                 navData= result;
                 watcher.rangeMax= result.nextPoint.arrivalCircle;
                 emitCourseData();
@@ -493,7 +494,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 value: navData.nextPoint.arrivalCircle
             });                                
         }     
-        if(typeof navData.previousPoint.position!== 'undefined') {
+        if(navData.previousPoint && typeof navData.previousPoint.position!== 'undefined') {
             val.push({
                 path: 'navigation.courseGreatCircle.previousPoint.position', 
                 value: navData.previousPoint.position
@@ -606,7 +607,10 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             if(typeof value.latitude === 'undefined' || 
                 typeof value.longitude === 'undefined') { return false }
         }
-        navData.previousPoint.position= value;
+        if(!navData.previousPoint) {
+            navData.previousPoint= {position: value};
+        }
+        else { navData.previousPoint.position= value }
         return true;
     }    
 

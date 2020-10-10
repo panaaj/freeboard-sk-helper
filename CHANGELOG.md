@@ -1,5 +1,9 @@
 # CHANGELOG: Freeboard-SK-Helper
 
+### v1.2.3
+
+- **fix**: Issue where after upgrading from previous version putting value`navigation.courseGreatCircle.previousPoint.position` thowing an exception.
+
 ### v1.2.2
 
 - **fix**: Issue where persisted `navigation.courseGreatCircle.previousPoint.position` was not part of the delta content on server start up.

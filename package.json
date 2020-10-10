@@ -1,6 +1,6 @@
 {
     "name": "freeboard-sk-helper",
-    "version": "1.2.2-1",
+    "version": "1.2.3",
     "description": "Freeboard-SK helper plugin for SignalK Server.",
     "main": "plugin/index.js",
     "keywords": [
