@@ -188,21 +188,6 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                     setPreviousPoint(v.value);   
                 })
             );            
-            subscriptions.push( // ** handle navigation.position. calc bearingTrue
-                server.streambundle.getSelfBus('navigation.position')
-                .onValue( (v:any)=> {     
-                    server.debug(`*** ${JSON.stringify(v.value)} ***`);
-                    if(navData.nextPoint.position) {
-                        let val= {
-                            path: 'navigation.courseGreatCircle.nextPoint.bearingTrue', 
-                            value: bearingTo(v.value, navData.nextPoint.position)
-                        };
-                        server.debug(`****** Emit course bearingTrue: ******`);
-                        server.debug(JSON.stringify(val));
-                        server.handleMessage(plugin.id, {updates: [ {values: [val] } ] });                                                       
-                    } 
-                })
-            );
             subscriptions.push( // ** handle nextPoint.arrivalCircle Update
                 server.streambundle.getSelfBus('navigation.courseGreatCircle.nextPoint.arrivalCircle')
                 .onValue( (v:any)=> {     
@@ -508,21 +493,6 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         }
       
     }
-
-    //*** Calculate the bearing between two points in radians ***
-    const bearingTo= (srcpt:any, destpt:any)=> {
-        let lat1= degreesToRadians(srcpt.latitude);
-        let lat2= degreesToRadians(destpt.latitude);
-        let dLon= degreesToRadians(destpt.longitude-srcpt.longitude);
-        let y= Math.sin(dLon) * Math.cos(lat2);
-        let x= Math.cos(lat1)*Math.sin(lat2) -
-                Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
-        let brad=Math.atan2(y, x);
-        let bdeg= radiansToDegrees(brad);
-        return (bdeg<0) ? degreesToRadians(360+bdeg) : brad;
-    }  
-    const degreesToRadians= (val:number=0)=> {  return val * Math.PI/180 }
-    const radiansToDegrees= (val:number=0)=> { return val * 180 / Math.PI }
 
     //*** Course data processing ***
 
