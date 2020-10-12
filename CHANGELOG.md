@@ -1,8 +1,12 @@
 # CHANGELOG: Freeboard-SK-Helper
 
+### v1.2.4
+
+- **remove**: `navigation.courseGreatCircle.nextPoint.bearingTrue` calculation (available in `signalk-derived-data` plugin `Course Data`).
+
 ### v1.2.3
 
-- **fix**: Issue where after upgrading from previous version putting value`navigation.courseGreatCircle.previousPoint.position` thowing an exception.
+- **fix**: Issue where after upgrading from previous version putting value `navigation.courseGreatCircle.previousPoint.position` thowing an exception.
 
 ### v1.2.2
 
