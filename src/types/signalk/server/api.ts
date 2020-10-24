@@ -72,6 +72,8 @@ interface DeltaManager {
 }
 
 interface ProviderStatusLogger {
+    setPluginStatus: (pluginId: string, status?: string) => void
+    setPluginError: (pluginId: string, status?: string) => void
     setProviderStatus: (providerId: string, status?: string) => void
     setProviderError: (providerId: string, status?: string) => void
 }

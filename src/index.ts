@@ -202,11 +202,15 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                         watcher.value= v.value;
                     }
                 })
-            );            
-            server.setProviderStatus('Started');
+            );    
+            let msg:string= 'Started';       
+            if(typeof server.setPluginStatus === 'function') { server.setPluginStatus(msg) }
+            else { server.setProviderStatus(msg) }
         } 
         catch(err) {
-            server.setProviderError(`Started with errors!`);
+            let msg:string= 'Started with errors!';       
+            if(typeof server.setPluginError === 'function') { server.setPluginError(msg) }
+            else { server.setProviderError(msg) }
             server.error('** EXCEPTION: **');
             server.error(err.stack);
             return err;
@@ -222,8 +226,10 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         timers.forEach( t=> clearInterval(t) );
         timers= [];
         notifier.stop();
-        if(db) { db.close().then( ()=> server.debug(`** ${db[0]} DB closed **`) ) }
-        server.setProviderStatus('Stopped');        
+        if(db) { db.close().then( ()=> server.debug(`** ${db[0]} DB closed **`) ) }       
+        let msg:string= 'Stopped';       
+        if(typeof server.setPluginStatus === 'function') { server.setPluginStatus(msg) }
+        else { server.setProviderStatus(msg) }
     }
 
     const initSKRoutes= (router:any) => {
