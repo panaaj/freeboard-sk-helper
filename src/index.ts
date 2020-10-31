@@ -102,7 +102,8 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             initDB(basePath)
             .then( (res:any)=> {
                 status=`Started.`;
-                server.setProviderStatus(status);
+                if(typeof server.setPluginStatus === 'function') { server.setPluginStatus(status) }
+                else { server.setProviderStatus(status) }
                 server.debug(`** ${plugin.name} started... ${(res) ? 'OK' : 'with errors!'}`);    
                 afterStart();
             })
@@ -113,7 +114,8 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             .then( res=> {
                 if(res.error) { server.debug(`*** GRIB ERROR: ${res.message} ***`) }
                 else { status+= ' EXP:resources/grib' }
-                server.setProviderStatus(status);
+                if(typeof server.setPluginStatus === 'function') { server.setPluginStatus(status) }
+                else { server.setProviderStatus(status) }
                 server.debug(`*** GRIB provider initialised... ${(!res.error) ? 'OK' : 'with errors!'}`);
             })
             .catch( (err:any)=> { server.debug(`*** GRIB ERROR: ${err} ***`) } );
@@ -122,7 +124,8 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             .then( res=> {
                 if(res.error) {server.debug(`*** TRACKS ERROR: ${res.message} ***`) }
                 else { status+= ' EXP:resources/tracks' }
-                server.setProviderStatus(status);
+                if(typeof server.setPluginStatus === 'function') { server.setPluginStatus(status) }
+                else { server.setProviderStatus(status) }
                 server.debug(`*** TRACKS provider initialised... ${(!res.error) ? 'OK' : 'with errors!'}`);
             })
             .catch( (err:any)=> { server.debug(`*** TRACKS ERROR: ${err} ***`) } );            

@@ -1,9 +1,13 @@
 # CHANGELOG: Freeboard-SK-Helper
 
+### v1.2.5
+
+- **update**: Use `setPluginStatus` and `setPluginError` instead of deprecated `setPoviderStatus` and `setProviderError`
+
 ### v1.2.4
 
 - **remove**: `navigation.courseGreatCircle.nextPoint.bearingTrue` calculation (available in `signalk-derived-data` plugin `Course Data`).
-- **update**: Use `setPluginStatus` and `setPluginError` instead of deprecated `setPoviderStatus` and `setProviderError`
+
 
 ### v1.2.3
 
