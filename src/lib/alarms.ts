@@ -1,4 +1,4 @@
-import { ALARM_METHOD, ALARM_STATE, DeltaNotification } from '../types/signalk/server';
+import { ALARM_METHOD, ALARM_STATE, DeltaNotification } from '@panaaj/sk-types';
 
 export class Notification {
 
