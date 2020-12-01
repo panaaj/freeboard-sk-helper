@@ -1,5 +1,9 @@
 # CHANGELOG: Freeboard-SK-Helper
 
+### v1.3.0
+
+- **update**: Remove `./resources/tracks` provider. `signalk-resources-fs v1.3.0` plugin now has the ability to define additional resource paths and `tracks` can be served using this functionality.
+
 ### v1.2.5
 
 - **update**: Use `setPluginStatus` and `setPluginError` instead of deprecated `setPoviderStatus` and `setProviderError`
