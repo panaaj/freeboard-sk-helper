@@ -92,11 +92,15 @@ export class Watcher {
     get sampleSize():number { return this._sampleSize }
 
     public isInRange(val:number= this._val):boolean {
-        return (val<=this.rangeMax && val>=this.rangeMin) ? true : false;
+        return typeof val=='number' && (val<=this.rangeMax && val>=this.rangeMin) ? true : false;
     }
 
     private _setValue(val:number) {
         if(this._sampleCount < this._sampleSize) { return }
+        if(typeof val!=='number') {
+            this.onExitRange( val);
+            return;
+        }
         if( this.isInRange(val) ) { //new value is in range
             if( !this.isInRange(this._val) ) { // ** was previously outside range
                 this.onEnterRange( val, (this._val<this.rangeMin) ? true : false );
