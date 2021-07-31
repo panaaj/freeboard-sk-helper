@@ -1,5 +1,10 @@
 import { ALARM_METHOD, ALARM_STATE, DeltaNotification } from '@panaaj/sk-types';
 
+export const STANDARD_ALARMS= [
+    'mob', 'fire', 'sinking', 'flooding', 'collision','grounding','listing',
+    'adrift','piracy','abandon'
+]
+
 export class Notification {
 
     private _message: DeltaNotification= {

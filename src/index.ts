@@ -19,8 +19,7 @@ import PouchDB from 'pouchdb';
 import path from 'path';
 import fs from 'fs';
 import mkdirp from 'mkdirp';
-import { GribStore } from './lib/gribfiles';
-import { Watcher, Notifier, Notification } from './lib/alarms';
+import { Watcher, Notifier, Notification, STANDARD_ALARMS } from './lib/alarms';
 
 
 const CONFIG_SCHEMA= {
@@ -69,8 +68,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         previousPoint: { 
             position: null
         }     
-    };          
-    let grib: GribStore= new GribStore();
+    };
    
     // ******** REQUIRED PLUGIN DEFINITION *******
     let plugin: ServerPlugin= {
@@ -105,15 +103,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             .catch( (err:any)=> { server.debug(err) } );
 
             // ** EXPERIMENTS **
-            grib.init(basePath)
-            .then( res=> {
-                if(res.error) { server.debug(`*** GRIB ERROR: ${res.message} ***`) }
-                else { status+= ' EXP:resources/grib' }
-                if(typeof server.setPluginStatus === 'function') { server.setPluginStatus(status) }
-                else { server.setProviderStatus(status) }
-                server.debug(`*** GRIB provider initialised... ${(!res.error) ? 'OK' : 'with errors!'}`);
-            })
-            .catch( (err:any)=> { server.debug(`*** GRIB ERROR: ${err} ***`) } );        
+
             // **********                
             
             // **register HTTP PUT handlers
@@ -143,7 +133,16 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                     'vessels.self',
                     'navigation.courseGreatCircle.previousPoint.position',
                     handlePutCourseData
-                );                               
+                );
+                // std alarms handler **
+                STANDARD_ALARMS.forEach( i=> {
+                    server.registerPutHandler(
+                        'vessels.self',
+                        `notifications.${i}`,
+                        handlePutAlarmState
+                    ); 
+                })
+                             
             } 
 
             // ** register STREAM UPDATE message handlers
@@ -222,51 +221,6 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
 
     const initSKRoutes= (router:any) => {
         server.debug(`** Registering HTTP paths **`);
-        // ** GRIB **
-        router.get('/resources/grib/meta', (req:any, res:any)=> {
-            res.json( {description: 'Collection of JSON fromatted GRIB data.'} );
-        })
-        router.get('/resources/grib', async (req:any, res:any)=> {
-            try {
-                let r= await grib.getResources('grib', null, {});
-                if(typeof r.error!=='undefined') { 
-                    res.status(r.status).send(r.message);
-                }
-                else { res.json(r) }
-            }
-            catch(err) { res.status(500).send('Error fetching resources!') }            
-        });
-        router.get(`/resources/grib/latest`, async (req:any, res:any)=> {
-            try {
-                let r= await grib.getResources('grib', null, {cmd: 'latest'});
-                if(typeof r.error!=='undefined') { 
-                    res.status(r.status).send(r.message);
-                }
-                else { res.json(r) }
-            }
-            catch(err) { res.status(500).send('Error fetching resources!') }            
-        });
-        router.get(`/resources/grib/*:*`, async (req:any, res:any, next:any)=> {
-            try {
-                let item= req.path.split('/').slice(-1)[0].split(':');
-                let section= (item.length>1) ? item[1].split('-') : null;
-                let r= await grib.getResources('grib', item[0], {section: section});
-                if(typeof r.error!=='undefined') { res.status(r.status).send(r.message) }
-                else { res.json(r) } 
-            }
-            catch(err) { res.status(500).send('Error fetching resources!') }
-        });
-        router.get(`/resources/grib/*`, async (req:any, res:any)=> {
-            try {
-                let r= await grib.getResources('grib', req.path.split('/')[3], {});
-                if(typeof r.error!=='undefined') { 
-                    res.status(r.status).send(r.message);
-                }
-                else { res.json(r) } 
-            }
-            catch(err) { res.status(500).send('Error fetching resources!') }            
-        });
-
         return router;
     }
 
@@ -339,6 +293,54 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         timers.push( setInterval( emitCourseData, 30000 ) );
     }
     
+    // ****
+    const handlePutAlarmState= (context:string, path:string, value:any, cb:any):ActionResult=> {
+        server.debug(path);
+        server.debug(value);
+        if(!path) { 
+            server.debug('Error: no path provided!');
+            return { 
+                state: 'COMPLETED', 
+                resultStatus: 400, 
+                statusCode: 400,
+                message: `Invalid reference!` 
+            } 
+        }
+
+        let pa= path.split('.');
+        let alarmType= pa[pa.length-1];
+        server.debug(JSON.stringify(alarmType));
+        let noti: Notification | DeltaMessage;
+        if(value) {
+            noti= new Notification(
+                alarmType,
+                value?.message ?? '',
+                value?.state ?? null,
+                value?.method ?? null
+            )
+        }
+        else { 
+            noti= {
+                path: path,
+                value: null
+            }
+        }
+        if(STANDARD_ALARMS.includes(alarmType)) {
+            // ** send delta **
+            server.debug(`****** Sending Delta (Std Alarm Notification): ******`);
+            emitNotification( noti ); 
+            return { state: 'COMPLETED', resultStatus: 200, statusCode: 200 } 
+        }  
+        else {
+            return { 
+                state: 'COMPLETED', 
+                resultStatus: 400, 
+                statusCode: 400,
+                message: `Invalid reference!` 
+            }              
+        } 
+    }
+
     // ********* Arrival circle events *****************
 
     watcher.onInRange= (val:number)=> {
@@ -485,7 +487,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     }
 
     const setActiveRoute= (value:any, key?:string)=> {
-        console.log('** setActiveRoute **', key ? key : 'no key');
+        server.debug(`** setActiveRoute ** ${key ? key : 'no key'}`);
         if(key=='href') { 
             navData.activeRoute.href= value;
             let dt= new Date();
@@ -497,7 +499,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     }    
 
     const setNextPoint= (value:any)=> {
-        console.log('** setNextPoint **', value)
+        server.debug(`** setNextPoint ** ${value}`);
         if(value) {
             if(typeof value.latitude === 'undefined' || 
                 typeof value.longitude === 'undefined') { return false }
@@ -507,7 +509,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     }
 
     const setPreviousPoint= (value:any)=> {
-        console.log('** setPreviousPoint **', value)
+        server.debug(`** setPreviousPoint ** ${value}`);
         if(value) {
             if(typeof value.latitude === 'undefined' || 
                 typeof value.longitude === 'undefined') { return false }
@@ -520,7 +522,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     }    
 
     const setArrivalCircle= (value:any)=> {
-        console.log('** setArrivalCircle **', value);
+        server.debug(`** setArrivalCircle ** ${value}`);
         if(value!== null && typeof value !=='number') { return false }
         navData.nextPoint.arrivalCircle= value;
         watcher.rangeMax= value;
