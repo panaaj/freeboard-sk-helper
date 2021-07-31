@@ -1,8 +1,14 @@
 # CHANGELOG: Freeboard-SK-Helper
 
+### v1.4.0
+
+- **deprecated**: GRIB experiment support.
+
+- **add**: Standard Alarm notification provider (PUT)
+
 ### v1.3.1
 
-- **fix**: Issue where null value would rsaise arrival alarm notification.
+- **fix**: Issue where null value would raise arrival alarm notification.
 
 ### v1.3.0
 

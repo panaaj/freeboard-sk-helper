@@ -65,26 +65,6 @@ navigation.arrivalCircleEntered
 ---
 ### Experiments:
 
-
-#### GRIB2JSON file provision:
-
-Serves the content of JSON formatted GRIB data produced by the GRIB2JSON tool at the path `./resources/grib`.
-
-To make the GRIB JSON file available place the json file in the `/home/<user>/.signalk/freeboard-sk-helper/grib` folder of your Signal K server.
-
-GRIB JSON data can be viewed in the following ways using the HTTP API:
-1) List summary of available GRIB data: `./resources/grib`
-1) List contents of the most current GRIB file: `./resources/grib/latest`
-1) List contents of a GRIB file: `./resources/grib/id` where `id` is the id of the GRIB file returned in 1).
-1) List only the specific sections of a GRIB file: `./resources/grib/id:n` where `id` is the id of the GRIB file and `n` is the index of the section in the file.
-
-_Example: get contents of GRIB file 2019101200_
-`./resources/grib/2019101200`
-
-_Example: get first section of GRIB file 2019101200_
-`./resources/grib/2019101200:0`
-
-_Example: get first and third section of GRIB file 2019101200_
-`./resources/grib/2019101200:0-2`
+- N/A
 
 
