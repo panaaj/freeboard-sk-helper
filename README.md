@@ -51,15 +51,50 @@ navigation.courseGreatCircle.nextPoint.arrivalCircle
 ```
 
 
-#### Arrival Alarm:
+#### Notifications / Alarms:
 
-Serves as a provider for the path `navigation.courseGreatCircle.nextPoint.arrivalCircle` to enable the radius of the circle surrounding the active destination to be defined.
+Serves as a provider for the following paths:
 
-This radius is then used to send a notification using the path `navigation.arrivalCircleEntered` to notify that the vessel has entered the arrival circle.
+`navigation.courseGreatCircle.nextPoint.arrivalCircle`
+
+-  Enables the radius of the circle surrounding the active destination to be defined to allow an arrival alarm (`notifications.navigation.arrivalCircleEntered`) to be raised.
+
+_Signal K special alarms:_
+
+`notifications.mob`
+
+`notifications.fire`
+
+`notifications.sinking`
+
+`notifications.flooding`
+
+`notifications.collision`
+
+`notifications.grounding`
+
+`notifications.listing`
+
+`notifications.adrift`
+
+`notifications.piracy`
+
+`notifications.abandon`
+
 
 _Notifications: (sent for the following paths)_
 ```
-navigation.arrivalCircleEntered
+notifications.navigation.arrivalCircleEntered
+notifications.mob
+notifications.fire
+notifications.sinking
+notifications.flooding
+notifications.collision
+notifications.grounding
+notifications.listing
+notifications.adrift
+notifications.piracy
+notifications.abandon
 ```
 
 ---

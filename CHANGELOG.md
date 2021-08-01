@@ -4,7 +4,7 @@
 
 - **deprecated**: GRIB experiment support.
 
-- **add**: Standard Alarm notification provider (PUT)
+- **new**: Standard Alarm notification provider (_`notifications.mob`, etc._)
 
 ### v1.3.1
 
