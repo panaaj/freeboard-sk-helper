@@ -1,5 +1,11 @@
 # CHANGELOG: Freeboard-SK-Helper
 
+### v1.4.1
+
+- **fix**: initialisation of Arrival circle.
+
+- **add**: Generate `courseRhumbline` as well as `courseGreatCircle` deltas
+
 ### v1.4.0
 
 - **deprecated**: GRIB experiment support.
