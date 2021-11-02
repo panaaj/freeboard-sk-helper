@@ -282,14 +282,32 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         // ** Get persisted COURSE data and UPDATE cache
         if(db) { 
             let result= await getRecord(db, 'navData');
-            if(result.error) { console.log('** No persisted NavData **') }
-            else { 
-                if(!result.previousPoint) { result.previousPoint= null }
-                navData= result;
-                watcher.rangeMax= result.nextPoint.arrivalCircle;
-                emitCourseData();
+            if(result.error) { server.debug('** No persisted NavData **') }
+            else { navData= result }
+        }
+        // ** clean navData **
+        server.debug(`** Initialising & Cleaning navData **`);
+        if(!navData.activeRoute) { 
+            navData.activeRoute= {
+                href: null,
+                startTime: null
             }
-        }         
+        }
+        if(!navData.activeRoute.href) { navData.activeRoute.href= null }
+        if(!navData.activeRoute.startTime) { navData.activeRoute.startTime= null }
+        if(!navData.nextPoint) { 
+            navData.nextPoint= { 
+                position: null,
+                arrivalCircle: null
+            }
+        }
+        if(!navData.nextPoint.position) { navData.nextPoint.position= null }
+        if(!navData.nextPoint.arrivalCircle) { navData.nextPoint.arrivalCircle= 100 }
+        if(!navData.previousPoint.position) { navData.previousPoint.position= null }
+        server.debug(`** navData: ${JSON.stringify(navData)}`);
+        // ** set up wathcer **
+        watcher.rangeMax= navData.nextPoint.arrivalCircle;
+        emitCourseData();
         timers.push( setInterval( emitCourseData, 30000 ) );
     }
     
