@@ -415,10 +415,18 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 path: 'navigation.courseGreatCircle.activeRoute.href', 
                 value: navData.activeRoute.href
             });
+            val.push({
+                path: 'navigation.courseRhumbline.activeRoute.href', 
+                value: navData.activeRoute.href
+            });
         }
         if(typeof navData.activeRoute.startTime!== 'undefined') {
             val.push({
                 path: 'navigation.courseGreatCircle.activeRoute.startTime', 
+                value: navData.activeRoute.startTime
+            });
+            val.push({
+                path: 'navigation.courseRhumbline.activeRoute.startTime', 
                 value: navData.activeRoute.startTime
             });
         }
@@ -426,27 +434,38 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             val.push({
                 path: 'navigation.courseGreatCircle.nextPoint.position', 
                 value: navData.nextPoint.position
-            });                                
+            });
+            val.push({
+                path: 'navigation.courseRhumbline.nextPoint.position', 
+                value: navData.nextPoint.position
+            });                             
         }
         if(typeof navData.nextPoint.arrivalCircle!== 'undefined') {
             val.push({
                 path: 'navigation.courseGreatCircle.nextPoint.arrivalCircle', 
                 value: navData.nextPoint.arrivalCircle
-            });                                
+            });
+            val.push({
+                path: 'navigation.courseRhumbline.nextPoint.arrivalCircle', 
+                value: navData.nextPoint.arrivalCircle
+            });                           
         }     
         if(navData.previousPoint && typeof navData.previousPoint.position!== 'undefined') {
             val.push({
                 path: 'navigation.courseGreatCircle.previousPoint.position', 
                 value: navData.previousPoint.position
-            });                                
-        }  
+            });
+            val.push({
+                path: 'navigation.courseRhumbline.previousPoint.position', 
+                value: navData.previousPoint.position
+            });                           
+        }
         if(val.length!=0) {
             server.debug(`****** Emitting COURSE data: ******`);
             server.debug(JSON.stringify(val));
             let msg: DeltaUpdate= {updates: [ {values: val} ] }
             server.handleMessage(plugin.id, msg); 
         }
-      
     }
 
     //*** Course data processing ***
