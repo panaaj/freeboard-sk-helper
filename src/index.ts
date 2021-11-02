@@ -199,7 +199,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             if(typeof server.setPluginError === 'function') { server.setPluginError(msg) }
             else { server.setProviderError(msg) }
             server.error('** EXCEPTION: **');
-            server.error(err.stack);
+            server.error((err as any).stack);
             return err;
         }          
     }  
