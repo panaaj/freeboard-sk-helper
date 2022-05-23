@@ -1,5 +1,9 @@
 # CHANGELOG: Freeboard-SK-Helper
 
+### v1.4.2
+
+- **fix**: Only send `arrivalCircleEntered` notifications on enter and exit of the area.
+
 ### v1.4.1
 
 - **fix**: initialisation of Arrival circle.

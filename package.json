@@ -1,6 +1,6 @@
 {
     "name": "freeboard-sk-helper",
-    "version": "1.4.1",
+    "version": "1.4.2",
     "description": "Freeboard-SK helper plugin for SignalK Server.",
     "main": "plugin/index.js",
     "keywords": [
@@ -29,7 +29,7 @@
     "dependencies": {
         "@panaaj/sk-types": "^1.1.1",
         "geojson-validation": "^0.2.0",
-        "mkdirp": "^0.5.5",
+        "mkdirp": "^0.5.6",
         "pouchdb": "^7.2.2"
     },
     "devDependencies": {

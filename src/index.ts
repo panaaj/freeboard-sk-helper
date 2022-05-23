@@ -362,45 +362,45 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     // ********* Arrival circle events *****************
 
     watcher.onInRange= (val:number)=> {
-        notifier.notification= new Notification(
-            'arrivalCircleEntered',
-            `Approaching Destination: ${val}m`,
-            ALARM_STATE.warn, 
-            [ALARM_METHOD.sound, ALARM_METHOD.visual]
-        );    
+      /*notifier.notification= new Notification(
+          'arrivalCircleEntered',
+          `Approaching Destination: ${val}m`,
+          ALARM_STATE.warn, 
+          [ALARM_METHOD.sound, ALARM_METHOD.visual]
+      ); */   
     }  
 
     watcher.onEnterRange= (val:number)=> {
-        emitNotification( 
-            new Notification(
-                'arrivalCircleEntered',
-                `Approaching Destination: ${val}m`,
-                ALARM_STATE.warn, 
-                [ALARM_METHOD.sound, ALARM_METHOD.visual]
-            )
-        ); 
-        notifier.start();         
+      emitNotification( 
+          new Notification(
+              'arrivalCircleEntered',
+              `Approaching Destination: ${val}m`,
+              ALARM_STATE.warn, 
+              [ALARM_METHOD.sound, ALARM_METHOD.visual]
+          )
+      ); 
+      notifier.start();         
     }
 
     watcher.onExitRange= (val:number)=> {
-        emitNotification( 
-            new Notification(
-                'arrivalCircleEntered',
-                `${val} > (${navData.nextPoint.arrivalCircle})`,
-                ALARM_STATE.normal, 
-                []
-            )
-        );
-        notifier.stop();      
+      emitNotification( 
+          new Notification(
+              'arrivalCircleEntered',
+              `${val} > (${navData.nextPoint.arrivalCircle})`,
+              ALARM_STATE.normal, 
+              []
+          )
+      );
+      notifier.stop();      
     }    
 
     // ** send notification delta message **
     const emitNotification= (n:Notification | DeltaMessage)=> {
-        let msg:DeltaMessage= (n instanceof Notification) ? n.message : n;
-        let delta:DeltaUpdate= {
-            updates: [{ values: [msg] }]
-        }
-        server.handleMessage(plugin.id, delta);
+      let msg:DeltaMessage= (n instanceof Notification) ? n.message : n;
+      let delta:DeltaUpdate= {
+          updates: [{ values: [msg] }]
+      }
+      server.handleMessage(plugin.id, delta);
     }      
 
     // ****************************************
@@ -408,205 +408,205 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
 
     // ** emit delta UPDATE message for persisted COURSE data 
     const emitCourseData= ()=> {
-        // ** send delta **
-        let val: Array<DeltaMessage>= [];
-        if(typeof navData.activeRoute.href!== 'undefined') {
-            val.push({
-                path: 'navigation.courseGreatCircle.activeRoute.href', 
-                value: navData.activeRoute.href
-            });
-            val.push({
-                path: 'navigation.courseRhumbline.activeRoute.href', 
-                value: navData.activeRoute.href
-            });
-        }
-        if(typeof navData.activeRoute.startTime!== 'undefined') {
-            val.push({
-                path: 'navigation.courseGreatCircle.activeRoute.startTime', 
-                value: navData.activeRoute.startTime
-            });
-            val.push({
-                path: 'navigation.courseRhumbline.activeRoute.startTime', 
-                value: navData.activeRoute.startTime
-            });
-        }
-        if(typeof navData.nextPoint.position!== 'undefined') {
-            val.push({
-                path: 'navigation.courseGreatCircle.nextPoint.position', 
-                value: navData.nextPoint.position
-            });
-            val.push({
-                path: 'navigation.courseRhumbline.nextPoint.position', 
-                value: navData.nextPoint.position
-            });                             
-        }
-        if(typeof navData.nextPoint.arrivalCircle!== 'undefined') {
-            val.push({
-                path: 'navigation.courseGreatCircle.nextPoint.arrivalCircle', 
-                value: navData.nextPoint.arrivalCircle
-            });
-            val.push({
-                path: 'navigation.courseRhumbline.nextPoint.arrivalCircle', 
-                value: navData.nextPoint.arrivalCircle
-            });                           
-        }     
-        if(navData.previousPoint && typeof navData.previousPoint.position!== 'undefined') {
-            val.push({
-                path: 'navigation.courseGreatCircle.previousPoint.position', 
-                value: navData.previousPoint.position
-            });
-            val.push({
-                path: 'navigation.courseRhumbline.previousPoint.position', 
-                value: navData.previousPoint.position
-            });                           
-        }
-        if(val.length!=0) {
-            server.debug(`****** Emitting COURSE data: ******`);
-            server.debug(JSON.stringify(val));
-            let msg: DeltaUpdate= {updates: [ {values: val} ] }
-            server.handleMessage(plugin.id, msg); 
-        }
+      // ** send delta **
+      let val: Array<DeltaMessage>= [];
+      if(typeof navData.activeRoute.href!== 'undefined') {
+          val.push({
+              path: 'navigation.courseGreatCircle.activeRoute.href', 
+              value: navData.activeRoute.href
+          });
+          val.push({
+              path: 'navigation.courseRhumbline.activeRoute.href', 
+              value: navData.activeRoute.href
+          });
+      }
+      if(typeof navData.activeRoute.startTime!== 'undefined') {
+          val.push({
+              path: 'navigation.courseGreatCircle.activeRoute.startTime', 
+              value: navData.activeRoute.startTime
+          });
+          val.push({
+              path: 'navigation.courseRhumbline.activeRoute.startTime', 
+              value: navData.activeRoute.startTime
+          });
+      }
+      if(typeof navData.nextPoint.position!== 'undefined') {
+          val.push({
+              path: 'navigation.courseGreatCircle.nextPoint.position', 
+              value: navData.nextPoint.position
+          });
+          val.push({
+              path: 'navigation.courseRhumbline.nextPoint.position', 
+              value: navData.nextPoint.position
+          });                             
+      }
+      if(typeof navData.nextPoint.arrivalCircle!== 'undefined') {
+          val.push({
+              path: 'navigation.courseGreatCircle.nextPoint.arrivalCircle', 
+              value: navData.nextPoint.arrivalCircle
+          });
+          val.push({
+              path: 'navigation.courseRhumbline.nextPoint.arrivalCircle', 
+              value: navData.nextPoint.arrivalCircle
+          });                           
+      }     
+      if(navData.previousPoint && typeof navData.previousPoint.position!== 'undefined') {
+          val.push({
+              path: 'navigation.courseGreatCircle.previousPoint.position', 
+              value: navData.previousPoint.position
+          });
+          val.push({
+              path: 'navigation.courseRhumbline.previousPoint.position', 
+              value: navData.previousPoint.position
+          });                           
+      }
+      if(val.length!=0) {
+          server.debug(`****** Emitting COURSE data: ******`);
+          server.debug(JSON.stringify(val));
+          let msg: DeltaUpdate= {updates: [ {values: val} ] }
+          server.handleMessage(plugin.id, msg); 
+      }
     }
 
     //*** Course data processing ***
 
     const handlePutCourseData= (context:string, path:string, value:any, cb:any):ActionResult => {
-        server.debug(` 
-            ${JSON.stringify(path)}, 
-            ${JSON.stringify(value)}`
-        ); 
-        let ok= false;
-        let val= [ {path: path, value: value} ];
+      server.debug(` 
+          ${JSON.stringify(path)}, 
+          ${JSON.stringify(value)}`
+      ); 
+      let ok= false;
+      let val= [ {path: path, value: value} ];
 
-        let p= path.split('.');
-        if(p[2]=='activeRoute') {
-            if(p[p.length-1]=='href') { 
-                ok= setActiveRoute(value, 'href');
-                let st= (value) ? navData.activeRoute.startTime : null;
-                val.push( {
-                    path: 'navigation.courseGreatCircle.activeRoute.startTime', 
-                    value: st
-                });
-            }
-            if(p[p.length-1]=='startTime') { ok= setActiveRoute(value, 'startTime') }
-        }        
-        if(p[2]=='nextPoint') {
-            if(p[p.length-1]=='position') { ok= setNextPoint(value) }
-            if(p[p.length-1]=='arrivalCircle') { ok= setArrivalCircle(value) }
-        }
-        if(p[2]=='previousPoint') {
-            if(p[p.length-1]=='position') { ok= setPreviousPoint(value) }
-        }          
+      let p= path.split('.');
+      if(p[2]=='activeRoute') {
+          if(p[p.length-1]=='href') { 
+              ok= setActiveRoute(value, 'href');
+              let st= (value) ? navData.activeRoute.startTime : null;
+              val.push( {
+                  path: 'navigation.courseGreatCircle.activeRoute.startTime', 
+                  value: st
+              });
+          }
+          if(p[p.length-1]=='startTime') { ok= setActiveRoute(value, 'startTime') }
+      }        
+      if(p[2]=='nextPoint') {
+          if(p[p.length-1]=='position') { ok= setNextPoint(value) }
+          if(p[p.length-1]=='arrivalCircle') { ok= setArrivalCircle(value) }
+      }
+      if(p[2]=='previousPoint') {
+          if(p[p.length-1]=='position') { ok= setPreviousPoint(value) }
+      }          
 
-        if(ok) {
-            // persist navData values
-            if(db) { 
-                server.debug(`** persisitng navData **\n${navData}`);
-                updateRecord(db, 'navData', navData)
-                .then( (r:any)=> {
-                    if(r.error) { newRecord(db, 'navData', navData) }
-                });
-            } 
-            // ** send delta **
-            server.debug(`****** Sending Delta: ******`);
-            server.debug(JSON.stringify(val));
-            server.handleMessage(plugin.id, {updates: [ {values: val} ] });
-            return { state: 'COMPLETED', resultStatus: 200, statusCode: 200 } 
-        }  
-        else {
-            return { 
-                state: 'COMPLETED', 
-                resultStatus: 400, 
-                statusCode: 400,
-                message: `Invalid reference!` 
-            }              
+      if(ok) {
+        // persist navData values
+        if(db) { 
+            server.debug(`** persisitng navData **\n${navData}`);
+            updateRecord(db, 'navData', navData)
+            .then( (r:any)=> {
+                if(r.error) { newRecord(db, 'navData', navData) }
+            });
         } 
+        // ** send delta **
+        server.debug(`****** Sending Delta: ******`);
+        server.debug(JSON.stringify(val));
+        server.handleMessage(plugin.id, {updates: [ {values: val} ] });
+        return { state: 'COMPLETED', resultStatus: 200, statusCode: 200 } 
+      }  
+      else {
+        return { 
+            state: 'COMPLETED', 
+            resultStatus: 400, 
+            statusCode: 400,
+            message: `Invalid reference!` 
+        }              
+      } 
     }
 
     const setActiveRoute= (value:any, key?:string)=> {
-        server.debug(`** setActiveRoute ** ${key ? key : 'no key'}`);
-        if(key=='href') { 
-            navData.activeRoute.href= value;
-            let dt= new Date();
-            let st:any= (value) ? dt.toISOString() : null;
-            navData.activeRoute.startTime= st;
-        }
-        if(key=='startTime') { navData.activeRoute.startTime= value }            
-        return true; 
+      server.debug(`** setActiveRoute ** ${key ? key : 'no key'}`);
+      if(key=='href') { 
+        navData.activeRoute.href= value;
+        let dt= new Date();
+        let st:any= (value) ? dt.toISOString() : null;
+        navData.activeRoute.startTime= st;
+      }
+      if(key=='startTime') { navData.activeRoute.startTime= value }            
+      return true; 
     }    
 
     const setNextPoint= (value:any)=> {
-        server.debug(`** setNextPoint ** ${value}`);
-        if(value) {
-            if(typeof value.latitude === 'undefined' || 
-                typeof value.longitude === 'undefined') { return false }
-        }
-        navData.nextPoint.position= value;
-        return true;
+      server.debug(`** setNextPoint ** ${value}`);
+      if(value) {
+        if(typeof value.latitude === 'undefined' || 
+            typeof value.longitude === 'undefined') { return false }
+      }
+      navData.nextPoint.position= value;
+      return true;
     }
 
     const setPreviousPoint= (value:any)=> {
-        server.debug(`** setPreviousPoint ** ${value}`);
-        if(value) {
-            if(typeof value.latitude === 'undefined' || 
-                typeof value.longitude === 'undefined') { return false }
-        }
-        if(!navData.previousPoint) {
-            navData.previousPoint= {position: value};
-        }
-        else { navData.previousPoint.position= value }
-        return true;
+      server.debug(`** setPreviousPoint ** ${value}`);
+      if(value) {
+          if(typeof value.latitude === 'undefined' || 
+              typeof value.longitude === 'undefined') { return false }
+      }
+      if(!navData.previousPoint) {
+          navData.previousPoint= {position: value};
+      }
+      else { navData.previousPoint.position= value }
+      return true;
     }    
 
     const setArrivalCircle= (value:any)=> {
-        server.debug(`** setArrivalCircle ** ${value}`);
-        if(value!== null && typeof value !=='number') { return false }
-        navData.nextPoint.arrivalCircle= value;
-        watcher.rangeMax= value;
-        return true;
+      server.debug(`** setArrivalCircle ** ${value}`);
+      if(value!== null && typeof value !=='number') { return false }
+      navData.nextPoint.arrivalCircle= value;
+      watcher.rangeMax= value;
+      return true;
     }
 
     //*** persist / retrieve settings ***
 
     const getRecord= async (db:any, key:any)=> {
-        try {
-            let entry= await db.get(key);
-            return entry.setting;
-        } 
-        catch (err) { 
-            server.debug(`Fetch ERROR: ${key} could not be retrieved!`)
-            return err;
-        }
+      try {
+          let entry= await db.get(key);
+          return entry.setting;
+      } 
+      catch (err) { 
+          server.debug(`Fetch ERROR: ${key} could not be retrieved!`)
+          return err;
+      }
     }
 
     const newRecord= async (db:any, key:any, value:any)=> {
-        try {
-            let result= await db.put({
-                _id: key,
-                setting: value
-            });
-            return result;
-        } 
-        catch (err) { 
-            server.debug(`Create ERROR: ${key} could not be created!`);
-            return err;
-        }
+      try {
+          let result= await db.put({
+              _id: key,
+              setting: value
+          });
+          return result;
+      } 
+      catch (err) { 
+          server.debug(`Create ERROR: ${key} could not be created!`);
+          return err;
+      }
     }
     
     const updateRecord= async (db:any, key:any, value:any)=> {
-        try {
-            let entry = await db.get(key);
-            let result= await db.put({
-                _id: key,
-                _rev: entry._rev,
-                setting: value
-            });
-            return result;
-        } 
-        catch (err) { 
-            server.debug(`Update ERROR: ${key} was not found... create new resource...`);
-            return err;
-        }
+      try {
+          let entry = await db.get(key);
+          let result= await db.put({
+              _id: key,
+              _rev: entry._rev,
+              setting: value
+          });
+          return result;
+      } 
+      catch (err) { 
+          server.debug(`Update ERROR: ${key} was not found... create new resource...`);
+          return err;
+      }
     }
 
     // ******************************************
