@@ -109,6 +109,9 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             // **register HTTP PUT handlers
             if(server.registerPutHandler) {
                 server.debug('** Registering Action Handler(s) **')    
+                
+                initTargetArrivalTime()
+                
                 server.registerPutHandler(
                     'vessels.self',
                     'navigation.courseGreatCircle.activeRoute.href',
@@ -610,5 +613,59 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
     }
 
     // ******************************************
+
+    const initTargetArrivalTime = () => {
+      // targetArrivalTime API endpoint
+      server.registerPutHandler(
+        'vessels.self',
+        `navigation.course.targetArrivalTime`,
+        setTargetArrivalTime
+      )
+    }
+  
+    // set Target Arrival Time value
+    const setTargetArrivalTime = (
+      context: string,
+      path: string,
+      value: any,
+      cb?: (actionResult: ActionResult) => void
+    ): ActionResult => {
+      server.debug(path)
+      server.debug(value.value)
+  
+      try {
+        emitDelta(path, value.value)
+        return {
+          state: 'COMPLETED',
+          resultStatus: 200,
+          statusCode: 200
+        }
+      } catch (error) {
+        return {
+          state: 'COMPLETED',
+          resultStatus: 404,
+          statusCode: 404,
+          message: `Invalid value!`
+        }
+      }
+    }
+  
+    // emit SK delta 
+    const emitDelta = (path: string, value: any) => {
+      let msg = {
+        path: path,
+        value: value
+      }
+      server.debug(`delta ${path} -> ${JSON.stringify(msg)}`)
+      server.handleMessage(plugin.id, {
+        updates: [
+          {
+            values: [msg]
+          }
+        ]
+      })
+    }
+
+
     return plugin;
 }
