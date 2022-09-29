@@ -26,6 +26,8 @@ _HTTP: (GET/PUT)_
 ./vesels/self/navigation/courseGreatCircle/nextPoint/position
 
 ./vesels/self/navigation/courseGreatCircle/nextPoint/arrivalCircle
+
+./vesels/self/navigation/course/targetArrivalTime
 ```
 
 _Stream:_
@@ -37,6 +39,8 @@ vessels.self.navigation.courseGreatCircle.activeRoute.startTime
 vessels.self.navigation.courseGreatCircle.nextPoint.position
 
 vessels.self.navigation.courseGreatCircle.nextPoint.arrivalCircle
+
+vessels.self.navigation.course.targetArrivalTime
 ```
 
 _Deltas: (sent for the following paths)_
@@ -48,6 +52,8 @@ navigation.courseGreatCircle.activeRoute.startTime
 navigation.courseGreatCircle.nextPoint.position
 
 navigation.courseGreatCircle.nextPoint.arrivalCircle
+
+navigation.course.targetArrivalTime
 ```
 
 

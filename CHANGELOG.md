@@ -1,5 +1,9 @@
 # CHANGELOG: Freeboard-SK-Helper
 
+### v1.5.0
+
+- **fix**: Add support for `targetArrivalTime`.
+
 ### v1.4.2
 
 - **fix**: Only send `arrivalCircleEntered` notifications on enter and exit of the area.
