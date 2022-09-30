@@ -41,6 +41,7 @@ interface NavData {
         startTime: string | null;
     };
     nextPoint: { 
+        href: string | null;
         position: any;
         arrivalCircle: number | null;
     };
@@ -61,7 +62,8 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
             href: null,
             startTime: null
         },
-        nextPoint: { 
+        nextPoint: {
+            href: null,
             position: null,
             arrivalCircle: null
         },
@@ -134,6 +136,11 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                 );
                 server.registerPutHandler(
                     'vessels.self',
+                    'navigation.courseGreatCircle.nextPoint.value.href',
+                    handlePutCourseData
+                );
+                server.registerPutHandler(
+                    'vessels.self',
                     'navigation.courseGreatCircle.previousPoint.position',
                     handlePutCourseData
                 );
@@ -184,7 +191,14 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
                     if(v['$source']==plugin.id) { return }
                     setArrivalCircle(v.value)   
                 })
-            );  
+            );
+            subscriptions.push( // ** handle nextPoint.value.href Update
+                server.streambundle.getSelfBus('navigation.courseGreatCircle.nextPoint.value.href')
+                .onValue( (v:any)=> {     
+                    if(v['$source']==plugin.id) { return }
+                    setHref(v.value)   
+                })
+            ); 
             subscriptions.push( // ** monitor nextPoint.distance updates
                 server.streambundle.getSelfBus('navigation.courseGreatCircle.nextPoint.distance')
                 .onValue( (v:any)=> {     
@@ -299,11 +313,13 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
         if(!navData.activeRoute.href) { navData.activeRoute.href= null }
         if(!navData.activeRoute.startTime) { navData.activeRoute.startTime= null }
         if(!navData.nextPoint) { 
-            navData.nextPoint= { 
+            navData.nextPoint= {
+                href: null,
                 position: null,
                 arrivalCircle: null
             }
         }
+        if(!navData.nextPoint.href) { navData.nextPoint.href= null }
         if(!navData.nextPoint.position) { navData.nextPoint.position= null }
         if(!navData.nextPoint.arrivalCircle) { navData.nextPoint.arrivalCircle= 100 }
         if(!navData.previousPoint.position) { navData.previousPoint.position= null }
@@ -452,7 +468,17 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
               path: 'navigation.courseRhumbline.nextPoint.arrivalCircle', 
               value: navData.nextPoint.arrivalCircle
           });                           
-      }     
+      }    
+      if(typeof navData.nextPoint.href!== 'undefined') {
+        val.push({
+            path: 'navigation.courseGreatCircle.nextPoint.value.href', 
+            value: navData.nextPoint.href
+        });
+        val.push({
+            path: 'navigation.courseRhumbline.nextPoint.value.href', 
+            value: navData.nextPoint.href
+        });                           
+    }   
       if(navData.previousPoint && typeof navData.previousPoint.position!== 'undefined') {
           val.push({
               path: 'navigation.courseGreatCircle.previousPoint.position', 
@@ -496,6 +522,7 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
       if(p[2]=='nextPoint') {
           if(p[p.length-1]=='position') { ok= setNextPoint(value) }
           if(p[p.length-1]=='arrivalCircle') { ok= setArrivalCircle(value) }
+          if(p[p.length-1]=='href') { ok= setHref(value) }
       }
       if(p[2]=='previousPoint') {
           if(p[p.length-1]=='position') { ok= setPreviousPoint(value) }
@@ -567,6 +594,13 @@ module.exports = (server: ServerAPI): ServerPlugin=> {
       navData.nextPoint.arrivalCircle= value;
       watcher.rangeMax= value;
       return true;
+    }
+
+    const setHref= (value:any)=> {
+        server.debug(`** setHref ** ${value}`);
+        if(value !== null && typeof value !=='string') { return false }
+        navData.nextPoint.href= value;
+        return true;
     }
 
     //*** persist / retrieve settings ***

@@ -1,8 +1,12 @@
 # CHANGELOG: Freeboard-SK-Helper
 
+### v1.5.1
+
+- **new**: Add support for `nextPoint.value.href`.
+
 ### v1.5.0
 
-- **fix**: Add support for `targetArrivalTime`.
+- **new**: Add support for `targetArrivalTime`.
 
 ### v1.4.2
 

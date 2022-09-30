@@ -27,6 +27,8 @@ _HTTP: (GET/PUT)_
 
 ./vesels/self/navigation/courseGreatCircle/nextPoint/arrivalCircle
 
+./vesels/self/navigation/courseGreatCircle/nextPoint/value/href
+
 ./vesels/self/navigation/course/targetArrivalTime
 ```
 
@@ -40,6 +42,8 @@ vessels.self.navigation.courseGreatCircle.nextPoint.position
 
 vessels.self.navigation.courseGreatCircle.nextPoint.arrivalCircle
 
+vessels.self.navigation.courseGreatCircle.nextPoint.value.href
+
 vessels.self.navigation.course.targetArrivalTime
 ```
 
@@ -52,6 +56,8 @@ navigation.courseGreatCircle.activeRoute.startTime
 navigation.courseGreatCircle.nextPoint.position
 
 navigation.courseGreatCircle.nextPoint.arrivalCircle
+
+navigation.courseGreatCircle.nextPoint.value.href
 
 navigation.course.targetArrivalTime
 ```
